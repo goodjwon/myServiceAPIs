@@ -8,7 +8,6 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -63,8 +62,8 @@ public class MyFiles extends BaseTimeEntity {
      * 파일을 조회 하면 해당 사용자를 나오게 한다.
      */
     @ManyToOne
-    @JoinColumn(name = "USER_CODE", referencedColumnName = "USER_CODE", nullable = false)
-    private MyUsers myUsersByUserCode;
+    @JoinColumn(name = "OWNER_SEQ", referencedColumnName = "OWNER_SEQ", nullable = false)
+    private FileOwner fileOwnerByUserCode;
 
 
     @Builder
@@ -72,7 +71,7 @@ public class MyFiles extends BaseTimeEntity {
                    String fileDownloadPath, String fileOwnerDisplayName,
                    String filePath, Long fileSize, FileStatus fileStatus,
                    Long postLinked, String postLinkType, String fileContentType,
-                   List<UserFilePermissions> userFilePermissions, MyUsers myUsersByUserCode,
+                   List<UserFilePermissions> userFilePermissions, FileOwner fileOwnerByUserCode,
                    List<FilePermissionGroup> filePermissionGroups) {
         this.fileOrgName = fileOrgName;
         this.filePhyName = filePhyName;
@@ -86,7 +85,7 @@ public class MyFiles extends BaseTimeEntity {
         this.postLinkType = postLinkType;
         this.fileContentType = fileContentType;
         this.userFilePermissions = userFilePermissions;
-        this.myUsersByUserCode = myUsersByUserCode;
+        this.fileOwnerByUserCode = fileOwnerByUserCode;
         this.filePermissionGroups = filePermissionGroups;
     }
 }
