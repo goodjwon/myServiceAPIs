@@ -43,13 +43,15 @@ import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 public class FileStorageService {
 
     private Path fileStorageLocation;
+    private final MyFilesRepository myFilesRopository;
 
     @Autowired
-    public FileStorageService(FileStorageProperties fileStorageProperties) {
+    public FileStorageService(FileStorageProperties fileStorageProperties, MyFilesRepository myFilesRopository) {
         this.fileStorageLocation = Paths
                 .get(fileStorageProperties.getUploadDir())
                 .toAbsolutePath()
                 .normalize();
+        this.myFilesRopository = myFilesRopository;
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
