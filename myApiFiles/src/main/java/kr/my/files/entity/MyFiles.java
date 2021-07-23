@@ -21,7 +21,8 @@ import java.util.List;
 @Entity
 @Table(name = "MY_FILES")
 public class MyFiles extends BaseTimeEntity {
-    @Id
+
+    @Id @GeneratedValue
     @Column(name = "FILE_SEQ", nullable = false, insertable = true, updatable = true)
     private Long fileSeq;
     @Column(name = "FILE_ORG_NAME", nullable = false, insertable = true, updatable = true, length = 255)

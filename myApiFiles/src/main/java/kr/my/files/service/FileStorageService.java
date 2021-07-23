@@ -89,6 +89,8 @@ public class FileStorageService {
                 .fileDownloadPath(fileDownloadUri)
                 .build();
 
+        myFilesRopository.save(myFile);
+
         return UploadFileMetadataResponse.builder().myFiles(myFile).build();
 
     }

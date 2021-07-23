@@ -98,15 +98,30 @@ file.protect-space-dir= D${user.home}/Download
 
 ```
     {
-        id: hashKey,
-        파일명: 
-        작성일:
-        크기:
-        원본확장자:
-        소유자: 
-        다운로드 경로: https
-        다운로드 권한 표시: owner, every, group ...  
+        파일명 :"e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
+        다운로드 경로 : "http://localhost/downloadFile/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
+        파일 타입 :"text/plain",
+        원본파일명 : "hello.txt",
+        해쉬값:"65a8e27d8879283831b664bd8b7f0ad4",
+        크기: 13,
+        파일 권한: ["OWNER_WRITE","OWNER_READ"]
+        파일 액세스 가능자: [{"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},{"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},{"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]
+        작성일: 
+        소유자:  
     }
+    {
+        "fileName":"e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
+        "fileDownloadUri":"http://localhost/downloadFile/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
+        "fileType":"text/plain",
+        "originFileName":"hello.txt",
+        "hashName":"65a8e27d8879283831b664bd8b7f0ad4",
+        "size":13,
+        "filePermissions":["OWNER_WRITE","OWNER_READ"],
+        "filePermissionGroups":[
+            {"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},
+            {"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},
+            {"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]
+     }
 ```
 
 ### 테스트 방법
