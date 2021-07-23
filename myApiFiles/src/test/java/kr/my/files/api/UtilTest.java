@@ -15,7 +15,7 @@ public class UtilTest {
     void checkFileSavePath() throws Exception {
         //given
         DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/");
-        String result = dtf3.format(LocalDateTime.now()).toString();
+        String result = dtf3.format(LocalDateTime.now());
         System.out.println(result);
         //then
         assertEquals(dtf3.format(LocalDateTime.now()), result);

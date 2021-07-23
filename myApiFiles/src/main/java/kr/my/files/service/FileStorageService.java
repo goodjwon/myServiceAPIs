@@ -9,6 +9,7 @@ import kr.my.files.enums.UserFilePermissions;
 import kr.my.files.exception.FileStorageException;
 import kr.my.files.exception.MyFileNotFoundException;
 import kr.my.files.property.FileStorageProperties;
+import kr.my.files.dao.MyFilesRepository;
 import lombok.NoArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,7 @@ import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 public class FileStorageService {
 
     private Path fileStorageLocation;
-    private final MyFilesRepository myFilesRopository;
+    private MyFilesRepository myFilesRopository;
 
     @Autowired
     public FileStorageService(FileStorageProperties fileStorageProperties, MyFilesRepository myFilesRopository) {
@@ -150,7 +151,7 @@ public class FileStorageService {
 
     private String getSubPath(String format){
         DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern(format);
-        return  dtf3.format(LocalDateTime.now()).toString();
+        return dtf3.format(LocalDateTime.now());
     }
 
     /**

@@ -93,7 +93,7 @@ public class FileControllerTest {
         DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm");
         Method method = fileStorageService.getClass().getDeclaredMethod("getSubPath", String.class);
         method.setAccessible(true);
-        String values = dtf3.format(LocalDateTime.now()).toString();
+        String values = dtf3.format(LocalDateTime.now());
 
         //when
         String argument = (String) method.invoke(fileStorageService, "yyyy/MM/dd/HH/mm");
