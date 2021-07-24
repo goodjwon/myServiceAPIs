@@ -19,6 +19,9 @@ public class UploadFileRequest {
     @NotEmpty
     private MultipartFile file;
     private MultipartFile[] files;
+    private String ownerDomainCode;
+    private String ownerAuthenticationCode;
+
     @NotEmpty
     private List <UserFilePermissions> userFilePermissions;
     @NotEmpty

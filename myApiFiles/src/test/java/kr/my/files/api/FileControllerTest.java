@@ -62,6 +62,9 @@ public class FileControllerTest {
         filePermissionGroup.add("f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7");
         filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a  ");
 
+
+        String ownerDomainCode = "";
+
         MockMultipartFile metadata = new MockMultipartFile(
                 "metadata",
                 "metadata",

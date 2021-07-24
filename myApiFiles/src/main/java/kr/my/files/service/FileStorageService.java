@@ -1,7 +1,9 @@
 package kr.my.files.service;
 
+import kr.my.files.dao.FileOwnerRepository;
 import kr.my.files.dto.UploadFileMetadataResponse;
 import kr.my.files.dto.UploadFileRequest;
+import kr.my.files.entity.FileOwner;
 import kr.my.files.entity.FilePermissionGroup;
 import kr.my.files.entity.MyFiles;
 import kr.my.files.enums.FileStatus;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 import org.apache.tika.Tika;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import static kr.my.files.commons.utils.StringUtils.textToHash;
 import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
 import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 
@@ -45,14 +48,18 @@ public class FileStorageService {
 
     private Path fileStorageLocation;
     private MyFilesRepository myFilesRopository;
+    private FileOwnerRepository fileOwnerRepository;
 
     @Autowired
-    public FileStorageService(FileStorageProperties fileStorageProperties, MyFilesRepository myFilesRopository) {
+    public FileStorageService(FileStorageProperties fileStorageProperties,
+                              MyFilesRepository myFilesRopository,
+                              FileOwnerRepository fileOwnerRepository) {
         this.fileStorageLocation = Paths
                 .get(fileStorageProperties.getUploadDir())
                 .toAbsolutePath()
                 .normalize();
         this.myFilesRopository = myFilesRopository;
+        this.fileOwnerRepository = fileOwnerRepository;
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
@@ -70,7 +77,13 @@ public class FileStorageService {
         String savePath = storeFile(fileRequest.getFile(), uuidFileName, subPath);
         String fileDownloadUri = getFileDownloadUri(subPath.concat(uuidFileName));
         String fileHash = getFileHash(fileRequest.getFile());
+        String doaminHash = textToHash(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
+
+        FileOwner fileOwner = FileOwner.builder()
+                .ownerDomain(fileRequest.getOwnerDomainCode())
+                .ownerAuthenticationCode(fileRequest.getOwnerAuthenticationCode())
+                .build();
 
         MyFiles myFile = MyFiles.builder()
                 .fileDownloadPath(fileDownloadUri)
@@ -84,6 +97,7 @@ public class FileStorageService {
                 .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
                 .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                 .filePhyName(uuidFileName)
+                .fileOwnerByUserCode(fileOwner)
                 .postLinkType("")
                 .postLinked(0L)
                 .fileDownloadPath(fileDownloadUri)
