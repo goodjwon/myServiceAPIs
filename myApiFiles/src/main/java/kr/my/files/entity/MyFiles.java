@@ -33,16 +33,12 @@ public class MyFiles extends BaseTimeEntity {
     private String fileHashCode;
     @Column(name = "FILE_DOWNLOAD_PATH", nullable = false, insertable = true, updatable = true, length = 1000)
     private String fileDownloadPath;
-    @Column(name = "FILE_OWNER_DISPLAY_NAME", nullable = true, insertable = true, updatable = true, length = 100)
-    private String fileOwnerDisplayName;
     @Column(name = "FILE_PATH", nullable = false, insertable = true, updatable = true, length = 1000)
     private String filePath;
     @Column(name = "FILE_Size", nullable = false, insertable = true, updatable = true, length = 1000)
     private Long fileSize;
     @Column(name = "FILE_STATUS", nullable = false, insertable = true, updatable = true, length = 3)
     private FileStatus fileStatus;
-    @Column(name = "REG_DATE", nullable = false, insertable = true, updatable = true)
-    private Timestamp regDate;
     @Column(name = "POST_LINKED", nullable = false, insertable = true, updatable = true)
     private Long postLinked;
     @Column(name = "POST_LINK_TYPE", nullable = false, insertable = true, updatable = true, length = 50)
@@ -78,7 +74,6 @@ public class MyFiles extends BaseTimeEntity {
         this.filePhyName = filePhyName;
         this.fileHashCode = fileHashCode;
         this.fileDownloadPath = fileDownloadPath;
-        this.fileOwnerDisplayName = fileOwnerDisplayName;
         this.filePath = filePath;
         this.fileSize = fileSize;
         this.fileStatus = fileStatus;

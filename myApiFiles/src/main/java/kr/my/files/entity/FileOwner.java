@@ -23,16 +23,16 @@ public class FileOwner extends BaseTimeEntity {
     @Column(name = "OWNER_SEQ", nullable = false, insertable = true, updatable = true)
     private Long ownerSeq;
 
-    @Column(name = "OWNER_DOMAIN_CODE", nullable = false, insertable = true, updatable = true, length = 255)
-    private String ownerDomain;
+    @Column(name = "OWNER_DOMAIN_CHECK_SUM", nullable = false, insertable = true, updatable = true, length = 255)
+    private String ownerDomainCheckSum;
 
-    @Column(name = "OWNER_AUTHENTICATION_CODE", nullable = false, insertable = true, updatable = true, length = 255)
-    private String ownerAuthenticationCode;
+    @Column(name = "OWNER_AUTHENTICATION_CHECK_SUM", nullable = false, insertable = true, updatable = true, length = 255)
+    private String ownerAuthenticationCheckSum;
 
     @Builder
-    public FileOwner(String ownerDomain, String ownerAuthenticationCode) {
-        this.ownerDomain = ownerDomain;
-        this.ownerAuthenticationCode = ownerAuthenticationCode;
+    public FileOwner(String ownerDomainCheckSum, String ownerAuthenticationCode) {
+        this.ownerDomainCheckSum = ownerDomainCheckSum;
+        this.ownerAuthenticationCheckSum = ownerAuthenticationCode;
     }
 
     /**

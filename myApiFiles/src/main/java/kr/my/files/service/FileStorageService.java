@@ -32,13 +32,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.tika.Tika;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import static kr.my.files.commons.utils.StringUtils.textToHash;
+import static kr.my.files.commons.utils.StringUtils.stringToChecksum;
 import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
 import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 
@@ -77,13 +78,10 @@ public class FileStorageService {
         String savePath = storeFile(fileRequest.getFile(), uuidFileName, subPath);
         String fileDownloadUri = getFileDownloadUri(subPath.concat(uuidFileName));
         String fileHash = getFileHash(fileRequest.getFile());
-        String doaminHash = textToHash(fileRequest.getOwnerDomainCode());
+        String doaminHash = stringToChecksum(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
 
-        FileOwner fileOwner = FileOwner.builder()
-                .ownerDomain(fileRequest.getOwnerDomainCode())
-                .ownerAuthenticationCode(fileRequest.getOwnerAuthenticationCode())
-                .build();
+
 
         MyFiles myFile = MyFiles.builder()
                 .fileDownloadPath(fileDownloadUri)
@@ -97,7 +95,7 @@ public class FileStorageService {
                 .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
                 .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                 .filePhyName(uuidFileName)
-                .fileOwnerByUserCode(fileOwner)
+                .fileOwnerByUserCode(ownerCheckSum(fileRequest))
                 .postLinkType("")
                 .postLinked(0L)
                 .fileDownloadPath(fileDownloadUri)
@@ -107,6 +105,30 @@ public class FileStorageService {
 
         return UploadFileMetadataResponse.builder().myFiles(myFile).build();
 
+    }
+
+    private FileOwner ownerCheckSum(UploadFileRequest fileRequest){
+
+        FileOwner fileOwner = ownerInformationConfirmation(fileRequest);
+        ;
+
+        if(ownerInformationConfirmation(fileRequest) == null){
+            fileOwner = fileOwnerRepository.save(FileOwner.builder()
+                    .ownerDomainCheckSum(stringToChecksum(fileRequest.getOwnerDomainCode()))
+                    .ownerAuthenticationCode(stringToChecksum(fileRequest.getOwnerAuthenticationCode()))
+                    .build()
+            );
+        }
+
+        return fileOwner;
+    }
+
+    private FileOwner ownerInformationConfirmation(UploadFileRequest fileRequest){
+        FileOwner fileOwner =  fileOwnerRepository
+                .findByOwnerDomainCheckSumAndOwnerAuthenticationCheckSum(
+                        stringToChecksum(fileRequest.getOwnerDomainCode()),
+                        stringToChecksum(fileRequest.getOwnerAuthenticationCode())).orElse(null);
+        return fileOwner;
     }
 
     private List<FilePermissionGroup> addUserAccessCode(List<String> idAccessCode){
