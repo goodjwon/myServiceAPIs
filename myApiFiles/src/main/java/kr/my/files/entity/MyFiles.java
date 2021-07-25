@@ -37,7 +37,8 @@ public class MyFiles extends BaseTimeEntity {
     private String filePath;
     @Column(name = "FILE_Size", nullable = false, insertable = true, updatable = true, length = 1000)
     private Long fileSize;
-    @Column(name = "FILE_STATUS", nullable = false, insertable = true, updatable = true, length = 3)
+    @Column(name = "FILE_STATUS", nullable = false, insertable = true, updatable = true, length = 50)
+    @Enumerated(EnumType.STRING)
     private FileStatus fileStatus;
     @Column(name = "POST_LINKED", nullable = false, insertable = true, updatable = true)
     private Long postLinked;
@@ -47,6 +48,7 @@ public class MyFiles extends BaseTimeEntity {
     private String fileContentType;
 
     @ElementCollection
+    @Enumerated(EnumType.STRING)
     private List<UserFilePermissions> userFilePermissions;
 
     @ElementCollection
@@ -65,8 +67,7 @@ public class MyFiles extends BaseTimeEntity {
 
     @Builder
     public MyFiles(String fileOrgName, String filePhyName, String fileHashCode,
-                   String fileDownloadPath, String fileOwnerDisplayName,
-                   String filePath, Long fileSize, FileStatus fileStatus,
+                   String fileDownloadPath, String filePath, Long fileSize, FileStatus fileStatus,
                    Long postLinked, String postLinkType, String fileContentType,
                    List<UserFilePermissions> userFilePermissions, FileOwner fileOwnerByUserCode,
                    List<FilePermissionGroup> filePermissionGroups) {

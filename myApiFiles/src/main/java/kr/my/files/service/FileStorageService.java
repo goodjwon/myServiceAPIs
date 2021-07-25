@@ -91,7 +91,6 @@ public class FileStorageService {
                 .filePath(savePath)
                 .fileSize(file.getSize())
                 .fileStatus(FileStatus.Registered)
-                .fileOwnerDisplayName("")
                 .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
                 .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                 .filePhyName(uuidFileName)
