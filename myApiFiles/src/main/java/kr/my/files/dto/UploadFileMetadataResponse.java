@@ -14,6 +14,8 @@ import java.util.List;
 @ToString
 @Getter
 public class UploadFileMetadataResponse extends RepresentationModel<UploadFileMetadataResponse> implements Serializable {
+    private String ownerDomainCode;
+    private String ownerAuthenticationCode;
     private String fileName;
     private String fileDownloadUri;
     private String fileType;
@@ -33,8 +35,10 @@ public class UploadFileMetadataResponse extends RepresentationModel<UploadFileMe
         this.checkSum = myFiles.getFileHashCode();
         this.filePermissions = myFiles.getUserFilePermissions();
         this.filePermissionGroups = myFiles.getFilePermissionGroups();
-
+        this.ownerAuthenticationCode = myFiles.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum();
+        this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
     }
+
 
     public void addFilePermission(List<UserFilePermissions> filePermissions){
         this.filePermissions = filePermissions;
