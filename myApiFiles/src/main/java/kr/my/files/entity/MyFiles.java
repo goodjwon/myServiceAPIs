@@ -48,8 +48,7 @@ public class MyFiles extends BaseTimeEntity {
     private String fileContentType;
 
     @ElementCollection
-    @Enumerated(EnumType.STRING)
-    private List<UserFilePermissions> userFilePermissions;
+    private List<String> userFilePermissions;
 
     @ElementCollection
     @CollectionTable(name="file_permission_group", joinColumns = @JoinColumn(name = "file_seq"))
@@ -69,7 +68,7 @@ public class MyFiles extends BaseTimeEntity {
     public MyFiles(String fileOrgName, String filePhyName, String fileHashCode,
                    String fileDownloadPath, String filePath, Long fileSize, FileStatus fileStatus,
                    Long postLinked, String postLinkType, String fileContentType,
-                   List<UserFilePermissions> userFilePermissions, FileOwner fileOwnerByUserCode,
+                   List<String> userFilePermissions, FileOwner fileOwnerByUserCode,
                    List<FilePermissionGroup> filePermissionGroups) {
         this.fileOrgName = fileOrgName;
         this.filePhyName = filePhyName;

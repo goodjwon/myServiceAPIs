@@ -141,9 +141,9 @@ public class FileStorageService {
 
     private UploadFileRequest addDefaultPermission(UploadFileRequest fileRequest) {
         if(fileRequest.getUserFilePermissions().isEmpty()){
-            List<UserFilePermissions> filePermissions = new ArrayList<>();
-            filePermissions.add(OWNER_WRITE);
-            filePermissions.add(OWNER_READ);
+            List<String> filePermissions = new ArrayList<>();
+            filePermissions.add(OWNER_WRITE.getPermission());
+            filePermissions.add(OWNER_READ.getPermission());
             fileRequest.addUserFilePermissions(filePermissions);
         }
         return fileRequest;

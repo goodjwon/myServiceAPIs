@@ -53,9 +53,9 @@ public class FileControllerTest {
 
         //Given Json 파일 생성
         //Json 요청 생성
-        List<UserFilePermissions> filePermissions = new ArrayList<>();
-        filePermissions.add(OWNER_WRITE);
-        filePermissions.add(OWNER_READ);
+        List<String> filePermissions = new ArrayList<>();
+        filePermissions.add(OWNER_WRITE.getPermission());
+        filePermissions.add(OWNER_READ.getPermission());
 
         List<String> filePermissionGroup = new ArrayList<>();
         filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");

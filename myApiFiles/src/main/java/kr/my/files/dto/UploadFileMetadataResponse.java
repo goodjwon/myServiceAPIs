@@ -22,7 +22,7 @@ public class UploadFileMetadataResponse extends RepresentationModel<UploadFileMe
     private String originFileName;
     private String checkSum;
     private long size;
-    private List<UserFilePermissions> filePermissions;
+    private List<String> filePermissions;
     private List<FilePermissionGroup> filePermissionGroups;
 
     @Builder
@@ -40,7 +40,7 @@ public class UploadFileMetadataResponse extends RepresentationModel<UploadFileMe
     }
 
 
-    public void addFilePermission(List<UserFilePermissions> filePermissions){
+    public void addFilePermission(List<String> filePermissions){
         this.filePermissions = filePermissions;
     }
 

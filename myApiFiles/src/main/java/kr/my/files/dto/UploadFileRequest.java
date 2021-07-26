@@ -25,7 +25,7 @@ public class UploadFileRequest {
     private String ownerAuthenticationCode;
 
     @NotEmpty
-    private List <UserFilePermissions> userFilePermissions;
+    private List <String> userFilePermissions;
     @NotEmpty
     private List<String> idAccessCodes;
 
@@ -37,7 +37,7 @@ public class UploadFileRequest {
         this.files = files;
     }
 
-    public void addUserFilePermissions(List <UserFilePermissions> userFilePermissions){
+    public void addUserFilePermissions(List <String> userFilePermissions){
         this.userFilePermissions = userFilePermissions;
     }
 
