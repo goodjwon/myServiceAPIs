@@ -8,6 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
+/**
+ * 파일업로드에 대해서 요청한다.
+ */
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

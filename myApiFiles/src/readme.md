@@ -137,6 +137,19 @@ Access-Control-Allow-Methods : 요청을 허용하는 메소드 (Default : GET, 
 Access-Control-Max-Age : 클라이언트에서 pre-flight의 요청 결과를 저장할 시간 지정. 해당 시간 동안은 pre-flight를 다시 요청하지 않는다.
 Access-Control-Allow-Headers : 요청을 허용하는 헤더
 ```
+#### DB 확인
+```sql
+SELECT * FROM `file-apis`.file_permission_group;
+
+SELECT * FROM `file-apis`.my_files;
+
+SELECT * FROM `file-apis`.file_permission_group;
+
+SELECT * FROM `file-apis`.file_shares;
+
+SELECT * FROM `file-apis`.file_owner;
+```
+
 
 #### Post Man
 

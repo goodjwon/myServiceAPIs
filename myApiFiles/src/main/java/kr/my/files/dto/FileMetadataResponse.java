@@ -2,7 +2,6 @@ package kr.my.files.dto;
 
 import kr.my.files.entity.FilePermissionGroup;
 import kr.my.files.entity.MyFiles;
-import kr.my.files.enums.UserFilePermissions;
 import lombok.*;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -13,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 @Getter
-public class UploadFileMetadataResponse extends RepresentationModel<UploadFileMetadataResponse> implements Serializable {
+public class FileMetadataResponse extends RepresentationModel<FileMetadataResponse> implements Serializable {
     private String ownerDomainCode;
     private String ownerAuthenticationCode;
     private String fileName;
@@ -26,7 +25,7 @@ public class UploadFileMetadataResponse extends RepresentationModel<UploadFileMe
     private List<FilePermissionGroup> filePermissionGroups;
 
     @Builder
-    public  UploadFileMetadataResponse(MyFiles myFiles) {
+    public FileMetadataResponse(MyFiles myFiles) {
         this.fileName = myFiles.getFilePhyName();
         this.fileDownloadUri = myFiles.getFileDownloadPath();
         this.fileType = myFiles.getFileContentType();

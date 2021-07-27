@@ -1,15 +1,16 @@
 package kr.my.files.service;
 
 import kr.my.files.dao.FileOwnerRepository;
-import kr.my.files.dto.UploadFileMetadataResponse;
+import kr.my.files.dto.FileInfoRequest;
+import kr.my.files.dto.FileMetadataResponse;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.entity.FileOwner;
 import kr.my.files.entity.FilePermissionGroup;
 import kr.my.files.entity.MyFiles;
 import kr.my.files.enums.FileStatus;
-import kr.my.files.enums.UserFilePermissions;
 import kr.my.files.exception.FileStorageException;
 import kr.my.files.exception.MyFileNotFoundException;
+import kr.my.files.exception.OwnerNotMeachedException;
 import kr.my.files.property.FileStorageProperties;
 import kr.my.files.dao.MyFilesRepository;
 import lombok.NoArgsConstructor;
@@ -32,7 +33,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -71,7 +71,7 @@ public class FileStorageService {
     /**
      *
      */
-    public UploadFileMetadataResponse saveFile(UploadFileRequest fileRequest) {
+    public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
 
         String uuidFileName = getUUIDFileName(fileRequest.getFile());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
@@ -102,9 +102,69 @@ public class FileStorageService {
 
         myFilesRopository.save(myFile);
 
-        return UploadFileMetadataResponse.builder().myFiles(myFile).build();
+        return FileMetadataResponse.builder().myFiles(myFile).build();
 
     }
+
+    /**
+     * 파일 유니크 명을통해 파일 정보를 요청한다.
+     * @param infoRequest
+     * @return
+     */
+    public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest){
+        return null;
+    }
+
+    /**
+     * 파일을 읽어서 스트림으로 돌려준다.
+     * @param fileInfoRequest
+     * @return
+     */
+    public Resource loadFileAsResource(FileInfoRequest fileInfoRequest) {
+        try {
+            if(!isOwnerRequest(fileInfoRequest)){
+                throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName());
+            }
+
+            MyFiles myFiles = myFilesRopository.findByFilePhyNameAAndFileHashCode(
+                    fileInfoRequest.getFilePhyName(),
+                    fileInfoRequest.getFileCheckSum()).orElseThrow(
+                            () -> new FileStorageException("File not found " + fileInfoRequest.getFilePhyName()));
+
+            Path filePath = this.fileStorageLocation.resolve(myFiles.getFilePath()).normalize();
+
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists()) {
+                return resource;
+            } else {
+                throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName());
+            }
+        } catch (MalformedURLException ex) {
+            throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName(), ex);
+        }
+    }
+
+    private boolean isOwnerRequest(FileInfoRequest fileInfoRequest){
+        boolean result = false;
+        MyFiles myFiles = myFilesRopository.findByFilePhyNameAAndFileHashCode(
+                fileInfoRequest.getFilePhyName(),
+                fileInfoRequest.getFileCheckSum())
+                    .orElseThrow(() -> new FileStorageException(fileInfoRequest.getFilePhyName()));
+
+
+        FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileSeq())
+                    .orElseThrow(()-> new OwnerNotMeachedException(fileInfoRequest.getFilePhyName()));
+
+        boolean a = fileOwner.getOwnerAuthenticationCheckSum().equals(fileInfoRequest.getOwnerAuthenticationCode());
+        boolean b = fileOwner.getOwnerDomainCheckSum().equals(fileInfoRequest.getOwnerDomainCode());
+
+        if(a && b) result = true;
+
+        return result;
+
+    }
+
 
     private FileOwner ownerCheckSum(UploadFileRequest fileRequest){
 
@@ -185,7 +245,11 @@ public class FileStorageService {
                 .toUriString();
     }
 
-
+    /**
+     * 요청받은 형태의 시간으로
+     * @param format
+     * @return
+     */
     private String getSubPath(String format){
         DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern(format);
         return dtf3.format(LocalDateTime.now());
@@ -235,17 +299,5 @@ public class FileStorageService {
         return mimeType;
     }
 
-    public Resource loadFileAsResource(String fileName) {
-        try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists()) {
-                return resource;
-            } else {
-                throw new MyFileNotFoundException("File not found " + fileName);
-            }
-        } catch (MalformedURLException ex) {
-            throw new MyFileNotFoundException("File not found " + fileName, ex);
-        }
-    }
+
 }
