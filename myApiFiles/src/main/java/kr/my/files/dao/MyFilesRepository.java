@@ -9,5 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface MyFilesRepository extends CrudRepository<MyFiles, Long> {
-    Optional<MyFiles> findByFilePhyNameAAndFileHashCode(String filePhyName, String fileHashCode);
+    Optional<MyFiles> findByFilePhyNameAndFileHashCode(String filePhyName, String fileHashCode);
 }

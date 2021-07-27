@@ -126,7 +126,7 @@ public class FileStorageService {
                 throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName());
             }
 
-            MyFiles myFiles = myFilesRopository.findByFilePhyNameAAndFileHashCode(
+            MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
                     fileInfoRequest.getFilePhyName(),
                     fileInfoRequest.getFileCheckSum()).orElseThrow(
                             () -> new FileStorageException("File not found " + fileInfoRequest.getFilePhyName()));
@@ -147,7 +147,7 @@ public class FileStorageService {
 
     private boolean isOwnerRequest(FileInfoRequest fileInfoRequest){
         boolean result = false;
-        MyFiles myFiles = myFilesRopository.findByFilePhyNameAAndFileHashCode(
+        MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
                 fileInfoRequest.getFilePhyName(),
                 fileInfoRequest.getFileCheckSum())
                     .orElseThrow(() -> new FileStorageException(fileInfoRequest.getFilePhyName()));
