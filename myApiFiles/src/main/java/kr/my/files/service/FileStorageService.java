@@ -81,8 +81,6 @@ public class FileStorageService {
         String doaminHash = stringToChecksum(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
 
-
-
         MyFiles myFile = MyFiles.builder()
                 .fileDownloadPath(fileDownloadUri)
                 .fileContentType(file.getContentType())

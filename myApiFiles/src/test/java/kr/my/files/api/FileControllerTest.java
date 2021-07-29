@@ -110,6 +110,14 @@ public class FileControllerTest {
     }
 
     @Test
+    @DisplayName("파일요청정보를 수신하고 적절한 권한이 부여되어 있으면 정보를 전달 한다.")
+    void getFileInfo() throws Exception {
+        //given
+        //when
+        //then
+    }
+
+    @Test
     @DisplayName("모두 공계 파일일때 별도 지정된 디렉터리로 저장 여부 확인")
     void uploadFPublicFile() throws Exception {
         //given
