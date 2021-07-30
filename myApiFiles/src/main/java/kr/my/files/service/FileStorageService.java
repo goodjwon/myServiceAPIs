@@ -110,7 +110,17 @@ public class FileStorageService {
      * @return
      */
     public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest){
-        return null;
+
+            if(isOwnerRequest(infoRequest)){
+                System.out.println("=================================");
+            }
+            MyFiles files = myFilesRopository.findByFilePhyNameAndFileHashCode(
+                    infoRequest.getFilePhyName(),
+                    infoRequest.getFileCheckSum())
+                    .orElseThrow(() ->
+                            new FileStorageException("File not found " + infoRequest.getFilePhyName()));
+
+        return FileMetadataResponse.builder().myFiles(files).build();
     }
 
     /**
@@ -151,7 +161,7 @@ public class FileStorageService {
                     .orElseThrow(() -> new FileStorageException(fileInfoRequest.getFilePhyName()));
 
 
-        FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileSeq())
+        FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileOwnerByUserCode().getOwnerSeq())
                     .orElseThrow(()-> new OwnerNotMeachedException(fileInfoRequest.getFilePhyName()));
 
         boolean a = fileOwner.getOwnerAuthenticationCheckSum().equals(fileInfoRequest.getOwnerAuthenticationCode());

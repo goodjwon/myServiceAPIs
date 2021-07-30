@@ -2,15 +2,20 @@ package kr.my.files.api;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.my.files.common.ReadTestJsonData;
+import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.enums.UserFilePermissions;
 import kr.my.files.service.FileStorageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -26,6 +31,7 @@ import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -113,8 +119,19 @@ public class FileControllerTest {
     @DisplayName("파일요청정보를 수신하고 적절한 권한이 부여되어 있으면 정보를 전달 한다.")
     void getFileInfo() throws Exception {
         //given
+        FileInfoRequest fileInfoRequest =
+            ReadTestJsonData.readValue("data/file-info-get-request.json", FileInfoRequest.class);
+        ;
         //when
+
         //then
+        mockMvc.perform(post("/file-info")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(fileInfoRequest)))
+                .andDo(print())
+                .andExpect(status().is2xxSuccessful())
+                ;
     }
 
     @Test
