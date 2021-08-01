@@ -111,8 +111,8 @@ public class FileStorageService {
      */
     public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest){
 
-            if(isOwnerRequest(infoRequest)){
-                System.out.println("=================================");
+            if(!isOwnerRequest(infoRequest)){
+                throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
             }
             MyFiles files = myFilesRopository.findByFilePhyNameAndFileHashCode(
                     infoRequest.getFilePhyName(),
@@ -131,7 +131,7 @@ public class FileStorageService {
     public Resource loadFileAsResource(FileInfoRequest fileInfoRequest) {
         try {
             if(!isOwnerRequest(fileInfoRequest)){
-                throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName());
+                throw new OwnerNotMeachedException("File not found " + fileInfoRequest.getFilePhyName());
             }
 
             MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
