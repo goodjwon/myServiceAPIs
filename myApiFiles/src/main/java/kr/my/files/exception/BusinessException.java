@@ -1,5 +1,7 @@
 package kr.my.files.exception;
 
+import kr.my.files.errors.ErrorCode;
+
 public class BusinessException extends RuntimeException {
 
     private final ErrorCode errorCode;

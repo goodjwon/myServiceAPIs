@@ -1,4 +1,4 @@
-package kr.my.files.exception;
+package kr.my.files.errors;
 
 import lombok.AccessLevel;
 import lombok.Getter;

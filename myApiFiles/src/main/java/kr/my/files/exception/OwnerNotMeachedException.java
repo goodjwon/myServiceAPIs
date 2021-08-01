@@ -1,7 +1,9 @@
 package kr.my.files.exception;
 
-public class OwnerNotMeachedException extends InvalidValueException {
+import kr.my.files.errors.ErrorCode;
+
+public class OwnerNotMeachedException extends BusinessException {
     public OwnerNotMeachedException(String message) {
-        super(ErrorCode.INVALID_INPUT_VALUE);
+        super(message,ErrorCode.INVALID_INPUT_VALUE);
     }
 }

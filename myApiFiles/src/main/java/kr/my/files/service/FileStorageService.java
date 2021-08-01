@@ -118,7 +118,7 @@ public class FileStorageService {
                     infoRequest.getFilePhyName(),
                     infoRequest.getFileCheckSum())
                     .orElseThrow(() ->
-                            new FileStorageException("File not found " + infoRequest.getFilePhyName()));
+                            new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
 
         return FileMetadataResponse.builder().myFiles(files).build();
     }
@@ -137,19 +137,16 @@ public class FileStorageService {
             MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
                     fileInfoRequest.getFilePhyName(),
                     fileInfoRequest.getFileCheckSum()).orElseThrow(
-                            () -> new FileStorageException("File not found " + fileInfoRequest.getFilePhyName()));
+                            () -> new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName()));
 
             Path filePath = this.fileStorageLocation.resolve(myFiles.getFilePath()).normalize();
 
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists()) {
-                return resource;
-            } else {
-                throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName());
-            }
+            return resource;
+
         } catch (MalformedURLException ex) {
-            throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName(), ex);
+            throw new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName());
         }
     }
 
@@ -158,7 +155,7 @@ public class FileStorageService {
         MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
                 fileInfoRequest.getFilePhyName(),
                 fileInfoRequest.getFileCheckSum())
-                    .orElseThrow(() -> new FileStorageException(fileInfoRequest.getFilePhyName()));
+                    .orElseThrow(() -> new MyFileNotFoundException(fileInfoRequest.getFilePhyName()));
 
 
         FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileOwnerByUserCode().getOwnerSeq())
