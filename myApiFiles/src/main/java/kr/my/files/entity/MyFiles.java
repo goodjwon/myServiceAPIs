@@ -54,8 +54,6 @@ public class MyFiles extends BaseTimeEntity {
     @CollectionTable(name="file_permission_group", joinColumns = @JoinColumn(name = "file_seq"))
     private List<FilePermissionGroup> filePermissionGroups;
 
-
-
     /**
      * 파일을 조회 하면 해당 사용자를 나오게 한다.
      */

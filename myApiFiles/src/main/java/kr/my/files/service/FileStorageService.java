@@ -76,7 +76,7 @@ public class FileStorageService {
         String uuidFileName = getUUIDFileName(fileRequest.getFile());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
         String savePath = storeFile(fileRequest.getFile(), uuidFileName, subPath);
-        String fileDownloadUri = getFileDownloadUri(subPath.concat(uuidFileName));
+        String fileDownloadUri = getFileDownloadUri(uuidFileName);
         String fileHash = getFileHash(fileRequest.getFile());
         String doaminHash = stringToChecksum(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
@@ -244,10 +244,7 @@ public class FileStorageService {
 
 
     private String getFileDownloadUri(String fullPath){
-        return  ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/downloadFile/")
-                .path(fullPath)
-                .toUriString();
+        return  new String("/downloadFile/").concat(fullPath);
     }
 
     /**
