@@ -11,7 +11,14 @@
 
 ## File upload
 
-### 환경설정
+### 명세
+- 명명규칙 
+  - url : 
+    - 명사 - 동사 ex) /file-download
+    - dash(-) 를 사용하여 단어와 단어 구분 
+  - method : 동사 - 명사 ex) downloadFile()
+    - 카멜(Camel)을 사용하여 표시
+> url 과 클래스명  java 에서는 각각 제약사항과 표기에 대한 해석이 다르기 때문이다.
 - 환경구성
     - mysql 설치
     - 스키마 생성 (file-apis)

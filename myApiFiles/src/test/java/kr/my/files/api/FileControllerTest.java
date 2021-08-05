@@ -30,8 +30,7 @@ import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
 import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -104,6 +103,7 @@ public class FileControllerTest {
     void checkFileSavePath() throws Exception {
         //given
         DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm");
+        //private method test
         Method method = fileStorageService.getClass().getDeclaredMethod("getSubPath", String.class);
         method.setAccessible(true);
         String values = dtf3.format(LocalDateTime.now());
@@ -132,6 +132,18 @@ public class FileControllerTest {
                 .andDo(print())
                 .andExpect(status().is2xxSuccessful())
                 ;
+    }
+
+    @Test
+    @DisplayName("파일에 대해서 다운로드 정보를 수신하고 파일을 내려 받는다.")
+    void downloadFile() throws Exception {
+        //given file request info
+        //when  file owner check
+        //then  file download
+        mockMvc.perform(get("/file-download")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM))
+                .andExpect(status().is(200))
+                .andReturn();
     }
 
     @Test
@@ -167,13 +179,6 @@ public class FileControllerTest {
         //then
     }
 
-    @Test
-    @DisplayName("업로드된 파일에 대해서 파일 다운로드 요청 관련 정보를 던지면 파일을 다운로드 한다.")
-    void downloadFile() throws Exception {
-        //given
-        //when
-        //then
-    }
 
     @Test
     @DisplayName("업로드된 파일에 대해서 파일 다운로드 요청 요청정보를 던지면 소유주만 파일을 다운로드 한다.")

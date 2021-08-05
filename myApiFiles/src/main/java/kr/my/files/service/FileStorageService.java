@@ -242,9 +242,9 @@ public class FileStorageService {
         }
     }
 
-
+    //todo 환경변수로 처리 할 수 있도록 수정.
     private String getFileDownloadUri(String fullPath){
-        return  new String("/downloadFile/").concat(fullPath);
+        return  new String("/file-download/").concat(fullPath);
     }
 
     /**
