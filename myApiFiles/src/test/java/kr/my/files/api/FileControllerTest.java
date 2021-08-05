@@ -25,6 +25,9 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -65,20 +68,21 @@ public class FileControllerTest {
         MockMultipartFile multipartFile  = new MockMultipartFile("file", "6ea6eab1-be5b-4761-b20f-af590bcdafc2.txt",
                 TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
 
-        String filePath = fileStorageProperties.getUploadDir();
-        filePath = filePath.concat("/9999/12/31/23/59/");
+        Path fileStorageLocation;
+        fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
+                .toAbsolutePath()
+                .normalize();
 
-        File Folder = new File(filePath);
+        Path targetLocation = fileStorageLocation.resolve(new String("9999/12/31/23/59")); //경로 만들기.
 
-        if (!Folder.exists()) {
-            Folder.mkdir();
+        if(!Files.exists(targetLocation)){
+            Files.createDirectories(targetLocation);
         }
 
-        File file = new File(filePath.concat("6ea6eab1-be5b-4761-b20f-af590bcdafc3.txt"));
+        Path savePath = targetLocation.resolve("6ea6eab1-be5b-4761-b20f-af590bcdafc2.txt");
 
-        try (OutputStream os = new FileOutputStream(file)) {
-            os.write(multipartFile.getBytes());
-        }
+        Files.copy(multipartFile.getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
+
     }
 
     @Test
