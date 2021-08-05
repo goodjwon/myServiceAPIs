@@ -106,7 +106,7 @@ public class FileController {
         String contentType = null;
         try {
             File file = resource.getFile();
-            URLConnection connection = file.toURI().toURL().openConnection();;
+            URLConnection connection = file.toURI().toURL().openConnection();
             contentType = connection.getContentType();
 
         } catch (IOException ex) {

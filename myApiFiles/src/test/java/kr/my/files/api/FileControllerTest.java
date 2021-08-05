@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.my.files.common.ReadTestJsonData;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.UploadFileRequest;
-import kr.my.files.enums.UserFilePermissions;
 import kr.my.files.service.FileStorageService;
+import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,12 +19,17 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import kr.my.files.property.FileStorageProperties;
 
 import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
 import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
@@ -50,6 +55,31 @@ public class FileControllerTest {
 
     @Autowired
     FileStorageService fileStorageService;
+
+    @Autowired
+    FileStorageProperties fileStorageProperties;
+
+
+    @Test
+    void setDefaultData() throws Exception {
+        MockMultipartFile multipartFile  = new MockMultipartFile("file", "6ea6eab1-be5b-4761-b20f-af590bcdafc2.txt",
+                TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
+
+        String filePath = fileStorageProperties.getUploadDir();
+        filePath = filePath.concat("/9999/12/31/23/59/");
+
+        File Folder = new File(filePath);
+
+        if (!Folder.exists()) {
+            Folder.mkdir();
+        }
+
+        File file = new File(filePath.concat("6ea6eab1-be5b-4761-b20f-af590bcdafc3.txt"));
+
+        try (OutputStream os = new FileOutputStream(file)) {
+            os.write(multipartFile.getBytes());
+        }
+    }
 
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
@@ -121,7 +151,6 @@ public class FileControllerTest {
         //given
         FileInfoRequest fileInfoRequest =
             ReadTestJsonData.readValue("data/file-info-get-request.json", FileInfoRequest.class);
-        ;
         //when
 
         //then
