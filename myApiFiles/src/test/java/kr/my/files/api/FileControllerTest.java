@@ -3,8 +3,14 @@ package kr.my.files.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.my.files.common.ReadTestJsonData;
+import kr.my.files.dao.FileOwnerRepository;
+import kr.my.files.dao.MyFilesRepository;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.UploadFileRequest;
+import kr.my.files.entity.FileOwner;
+import kr.my.files.entity.FilePermissionGroup;
+import kr.my.files.entity.MyFiles;
+import kr.my.files.enums.FileStatus;
 import kr.my.files.service.FileStorageService;
 import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,8 +38,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import kr.my.files.property.FileStorageProperties;
 
+import javax.validation.constraints.NotEmpty;
+
+import static kr.my.files.commons.utils.StringUtils.stringToChecksum;
 import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
 import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -59,40 +70,19 @@ public class FileControllerTest {
     @Autowired
     FileStorageService fileStorageService;
 
-    @Autowired
-    FileStorageProperties fileStorageProperties;
-
-
-    @Test
-    void setDefaultData() throws Exception {
-        MockMultipartFile multipartFile  = new MockMultipartFile("file", "6ea6eab1-be5b-4761-b20f-af590bcdafc2.txt",
-                TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
-
-        Path fileStorageLocation;
-        fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
-                .toAbsolutePath()
-                .normalize();
-
-        Path targetLocation = fileStorageLocation.resolve(new String("9999/12/31/23/59")); //경로 만들기.
-
-        if(!Files.exists(targetLocation)){
-            Files.createDirectories(targetLocation);
-        }
-
-        Path savePath = targetLocation.resolve("6ea6eab1-be5b-4761-b20f-af590bcdafc2.txt");
-
-        Files.copy(multipartFile.getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
-
-    }
+    private FileInfoRequest fileInfoRequest;
 
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
+    @BeforeEach
     void uploadShouldReturnMetadataNameWithJsonFile() throws Exception {
         //Given 파일생성
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt",
                 TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
 
         //Given Json 파일 생성
+
+
         //Json 요청 생성
         List<String> filePermissions = new ArrayList<>();
         filePermissions.add(OWNER_WRITE.getPermission());
@@ -101,7 +91,7 @@ public class FileControllerTest {
         List<String> filePermissionGroup = new ArrayList<>();
         filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");
         filePermissionGroup.add("f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7");
-        filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a  ");
+        filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a");
 
         String ownerDomain = "www.abc.com";
         String userCode = "goodjwon@gmail.com";
@@ -119,6 +109,9 @@ public class FileControllerTest {
                                 .ownerAuthenticationCode(userCode)
                                 .build())
                         .getBytes(StandardCharsets.UTF_8));
+
+        this.fileInfoRequest = FileInfoRequest.builder()
+                .filePhyName().fileCheckSum().ownerAuthenticationCode().ownerAuthenticationCode();
 
         //then
         mockMvc.perform(multipart("/upload-file-permission-json-file")

@@ -95,7 +95,6 @@ public class FileStorageService {
                 .fileOwnerByUserCode(ownerCheckSum(fileRequest))
                 .postLinkType("")
                 .postLinked(0L)
-                .fileDownloadPath(fileDownloadUri)
                 .build();
 
         myFilesRopository.save(myFile);
