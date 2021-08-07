@@ -6,6 +6,7 @@ import kr.my.files.common.ReadTestJsonData;
 import kr.my.files.dao.FileOwnerRepository;
 import kr.my.files.dao.MyFilesRepository;
 import kr.my.files.dto.FileInfoRequest;
+import kr.my.files.dto.FileMetadataResponse;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.entity.FileOwner;
 import kr.my.files.entity.FilePermissionGroup;
@@ -13,9 +14,7 @@ import kr.my.files.entity.MyFiles;
 import kr.my.files.enums.FileStatus;
 import kr.my.files.service.FileStorageService;
 import org.aspectj.lang.annotation.Before;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -55,6 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureRestDocs
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -72,9 +72,48 @@ public class FileControllerTest {
 
     private FileInfoRequest fileInfoRequest;
 
+
+    @DisplayName("file, permission.json 파일 submit 테스트")
+    @BeforeAll
+    void uploadBefore() throws Exception {
+        //Given 파일생성
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt",
+                TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
+
+
+        //Json 요청 생성
+        List<String> filePermissions = new ArrayList<>();
+        filePermissions.add(OWNER_WRITE.getPermission());
+        filePermissions.add(OWNER_READ.getPermission());
+
+        List<String> filePermissionGroup = new ArrayList<>();
+        filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");
+        filePermissionGroup.add("f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7");
+        filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a");
+
+        String ownerDomain = "www.abc.com";
+        String userCode = "goodjwon@gmail.com";
+
+
+        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
+                .file(file)
+                .fileName(file.getOriginalFilename())
+                .userFilePermissions(filePermissions)
+                .idAccessCodes(filePermissionGroup)
+                .ownerDomainCode(ownerDomain)
+                .ownerAuthenticationCode(userCode)
+                .build());
+
+        this.fileInfoRequest = FileInfoRequest.builder()
+                .filePhyName(response.getFileName())
+                .fileCheckSum(response.getCheckSum())
+                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
+                .ownerDomainCode(response.getOwnerDomainCode())
+                .build();
+    }
+
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
-    @BeforeEach
     void uploadShouldReturnMetadataNameWithJsonFile() throws Exception {
         //Given 파일생성
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt",
@@ -110,9 +149,6 @@ public class FileControllerTest {
                                 .build())
                         .getBytes(StandardCharsets.UTF_8));
 
-        this.fileInfoRequest = FileInfoRequest.builder()
-                .filePhyName().fileCheckSum().ownerAuthenticationCode().ownerAuthenticationCode();
-
         //then
         mockMvc.perform(multipart("/upload-file-permission-json-file")
                 .file(file).file(metadata))
@@ -145,16 +181,10 @@ public class FileControllerTest {
     @Test
     @DisplayName("파일요청정보를 수신하고 적절한 권한이 부여되어 있으면 정보를 전달 한다.")
     void getFileInfo() throws Exception {
-        //given
-        FileInfoRequest fileInfoRequest =
-            ReadTestJsonData.readValue("data/file-info-get-request.json", FileInfoRequest.class);
-        //when
-
-        //then
         mockMvc.perform(post("/file-info")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaTypes.HAL_JSON)
-                .content(objectMapper.writeValueAsString(fileInfoRequest)))
+                .content(objectMapper.writeValueAsString(this.fileInfoRequest)))
                 .andDo(print())
                 .andExpect(status().is2xxSuccessful())
                 ;
