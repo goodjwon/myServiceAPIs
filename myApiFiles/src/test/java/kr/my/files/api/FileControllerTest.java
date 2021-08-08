@@ -2,18 +2,10 @@ package kr.my.files.api;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.my.files.common.ReadTestJsonData;
-import kr.my.files.dao.FileOwnerRepository;
-import kr.my.files.dao.MyFilesRepository;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
 import kr.my.files.dto.UploadFileRequest;
-import kr.my.files.entity.FileOwner;
-import kr.my.files.entity.FilePermissionGroup;
-import kr.my.files.entity.MyFiles;
-import kr.my.files.enums.FileStatus;
 import kr.my.files.service.FileStorageService;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -24,35 +16,29 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import kr.my.files.property.FileStorageProperties;
+import org.springframework.test.web.servlet.MvcResult;
 
-import javax.validation.constraints.NotEmpty;
-
-import static kr.my.files.commons.utils.StringUtils.stringToChecksum;
 import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
 import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.internal.bytebuddy.matcher.ElementMatchers.is;
+
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureRestDocs
@@ -196,10 +182,17 @@ public class FileControllerTest {
         //given file request info
         //when  file owner check
         //then  file download
-        mockMvc.perform(get("/file-download")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM))
+        MvcResult result = mockMvc.perform(post("/file-download")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(this.fileInfoRequest)))
                 .andExpect(status().is(200))
+                .andExpect(header().string("Accept-Ranges", "bytes"))
+                .andDo(print())
                 .andReturn();
+
+        assertThat(result.getResponse().getStatus(), is(equalTo(200)));
+        assertThat(result.getResponse().getContentAsByteArray().length, is(equalTo(13)));
+        assertThat(result.getResponse().getContentType(), is(equalTo("text/plain;charset=UTF-8")));
     }
 
     @Test

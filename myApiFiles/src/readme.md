@@ -136,6 +136,7 @@ file.protect-space-dir= D${user.home}/Download
 ### 테스트 방법
 #### Junit Test Case
 - FilControllerTest 실행
+  - 참고 : https://theheydaze.tistory.com/218
 
 #### web ui
 - http://localhost:8080/demo-file-upload.html 호출 후 해당 필드 입력하여 전송
