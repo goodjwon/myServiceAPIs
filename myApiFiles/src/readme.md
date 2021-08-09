@@ -23,7 +23,7 @@
     - mysql 설치
     - 스키마 생성 (file-apis)
     - application.properties mysql 정보 수정 (본인 환경에 맞도록)
-
+ 
 #### 파일저장: path YYYY/MM/DD/HH
 
 #### 파일명: hash (MD5) 저장
@@ -43,6 +43,23 @@
     6. 파일 유형을 분석해서 경로 분류
         => https://myhappyman.tistory.com/133
 
+
+### 실행방법
+
+#### 개발환경
+
+#### 운영환경
+- jar 로 기동 (기본) : 기존 설정대로 사용한다.
+- jar 로 기동 (확장) : 각 하드웨어 셋팅에 맞추어 기본적인 속성을 overwrite 한다.
+  - 참고 URL : 
+    - https://www.baeldung.com/spring-properties-file-outside-jar
+    - http://honeymon.io/tech/2021/01/16/spring-boot-config-data-migration.html
+ 
+- 필수 교체 속성:
+  - DB 관련 속성 변경
+  - 파일 저장패스 변경
+  - 파일 다운로드 관련 uri 변경
+- 환경변수를 담은 실행 shell 을 만들서어 사용한다.
 
 ### 파일업로그 기능 목록
 
