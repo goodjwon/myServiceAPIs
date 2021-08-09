@@ -9,6 +9,8 @@ public class FileStorageProperties {
     private String uploadDir;
     private String publicSpaceDir;
     private String protectSpaceDir;
+    private String downloadPath;
+    private String downloadPublicPath;
 
     public String getUploadDir() {
         return uploadDir;
@@ -32,5 +34,21 @@ public class FileStorageProperties {
 
     public void setProtectSpaceDir(String protectSpaceDir) {
         this.protectSpaceDir = protectSpaceDir;
+    }
+
+    public String getDownloadPath() {
+        return downloadPath;
+    }
+
+    public void setDownloadPath(String downloadPath) {
+        this.downloadPath = downloadPath;
+    }
+
+    public String getDownloadPublicPath() {
+        return downloadPublicPath;
+    }
+
+    public void setDownloadPublicPath(String downloadPublicPath) {
+        this.downloadPublicPath = downloadPublicPath;
     }
 }

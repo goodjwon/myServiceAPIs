@@ -37,7 +37,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.tika.Tika;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import static kr.my.files.commons.utils.StringUtils.collectionToStream;
 import static kr.my.files.commons.utils.StringUtils.stringToChecksum;
@@ -71,7 +70,7 @@ public class FileStorageService {
         String uuidFileName = getUUIDFileName(fileRequest.getFile());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
         String savePath = storeFile(fileRequest, uuidFileName, subPath);
-        String fileDownloadUri = getFileDownloadUri(uuidFileName);
+        String fileDownloadUri = getFileDownloadUri(fileRequest, uuidFileName);
         String fileHash = getFileHash(fileRequest.getFile());
         String doaminHash = stringToChecksum(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
@@ -207,6 +206,7 @@ public class FileStorageService {
         return fileRequest;
     }
 
+
     /**
      * 업로드된 파일을 지정된 경로에 저장한다.
      * @param request
@@ -246,8 +246,18 @@ public class FileStorageService {
     }
 
     //todo 환경변수로 처리 할 수 있도록 수정.
-    private String getFileDownloadUri(String fullPath){
-        return "/file-download/".concat(fullPath);
+    private String getFileDownloadUri(UploadFileRequest request, String fullPath){
+        final String[] result = {"/file-download/"};
+
+        request.getUserFilePermissions().forEach(filePermission->{
+            if(filePermission.equals(PUBLIC_READ.getPermission())){
+                result[0] = this.fileStorageProperties.getDownloadPublicPath().concat(fullPath);
+            } else {
+                result[0] = this.fileStorageProperties.getDownloadPath().concat(fullPath);
+            }
+        });
+
+        return result[0];
     }
 
     /**
