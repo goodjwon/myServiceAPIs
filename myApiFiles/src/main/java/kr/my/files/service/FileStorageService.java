@@ -39,9 +39,9 @@ import java.util.stream.Collectors;
 import org.apache.tika.Tika;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import static kr.my.files.commons.utils.StringUtils.collectionToStream;
 import static kr.my.files.commons.utils.StringUtils.stringToChecksum;
-import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
-import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
+import static kr.my.files.enums.UserFilePermissions.*;
 
 @NoArgsConstructor
 @Service
@@ -50,22 +50,17 @@ public class FileStorageService {
     private Path fileStorageLocation;
     private MyFilesRepository myFilesRopository;
     private FileOwnerRepository fileOwnerRepository;
+    private FileStorageProperties fileStorageProperties;
 
     @Autowired
     public FileStorageService(FileStorageProperties fileStorageProperties,
                               MyFilesRepository myFilesRopository,
                               FileOwnerRepository fileOwnerRepository) {
-        this.fileStorageLocation = Paths
-                .get(fileStorageProperties.getUploadDir())
-                .toAbsolutePath()
-                .normalize();
+
         this.myFilesRopository = myFilesRopository;
         this.fileOwnerRepository = fileOwnerRepository;
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new FileStorageException("Could not create the directory where the uploaded files will be stored.");
-        }
+        this.fileStorageProperties = fileStorageProperties;
+
     }
 
     /**
@@ -75,7 +70,7 @@ public class FileStorageService {
 
         String uuidFileName = getUUIDFileName(fileRequest.getFile());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
-        String savePath = storeFile(fileRequest.getFile(), uuidFileName, subPath);
+        String savePath = storeFile(fileRequest, uuidFileName, subPath);
         String fileDownloadUri = getFileDownloadUri(uuidFileName);
         String fileHash = getFileHash(fileRequest.getFile());
         String doaminHash = stringToChecksum(fileRequest.getOwnerDomainCode());
@@ -194,11 +189,11 @@ public class FileStorageService {
     }
 
     private List<FilePermissionGroup> addUserAccessCode(List<String> idAccessCode){
-        return idAccessCode.stream()
+        return collectionToStream(idAccessCode)
                 .map(a ->
-                    FilePermissionGroup.builder()
-                    .idAccessCode(a)
-                    .build())
+                        FilePermissionGroup.builder()
+                                .idAccessCode(a)
+                                .build())
                 .collect(Collectors.toList());
     }
 
@@ -214,13 +209,23 @@ public class FileStorageService {
 
     /**
      * 업로드된 파일을 지정된 경로에 저장한다.
-     * @param file
+     * @param request
      * @return 저장된 경로를 반환한다.
      */
-    private String storeFile(MultipartFile file, String uuidFileName, String subPath) {
-        // Normalize file name
-
+    private String storeFile(UploadFileRequest request, String uuidFileName, String subPath) {
         try {
+            request.getUserFilePermissions().forEach(filePermission->{
+                if(filePermission.equals(PUBLIC_READ.getPermission())){
+                    this.fileStorageLocation = Paths.get(fileStorageProperties.getPublicSpaceDir())
+                            .toAbsolutePath()
+                            .normalize();
+                } else {
+                    this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
+                            .toAbsolutePath()
+                            .normalize();
+                }
+            });
+
             Path targetLocation = this.fileStorageLocation.resolve(subPath); //경로 만들기.
 
             //경로가 없을 경우 만든다.
@@ -231,7 +236,7 @@ public class FileStorageService {
             Path savePath = targetLocation.resolve(uuidFileName);
 
             //파일 저장하기
-            Files.copy(file.getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(request.getFile().getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
 
             return savePath.toString();
 

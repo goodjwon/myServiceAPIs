@@ -11,11 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -25,11 +28,7 @@ import java.util.List;
 
 import org.springframework.test.web.servlet.MvcResult;
 
-import static kr.my.files.enums.UserFilePermissions.OWNER_READ;
-import static kr.my.files.enums.UserFilePermissions.OWNER_WRITE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.internal.bytebuddy.matcher.ElementMatchers.is;
-
+import static kr.my.files.enums.UserFilePermissions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -98,6 +97,41 @@ public class FileControllerTest {
                 .build();
     }
 
+
+    @BeforeAll
+    void uploadPublicPermissionBefore() throws Exception {
+        //Given 파일생성
+        File resource = new ClassPathResource("data/sample-image/IMG_3421.jpg").getFile();
+        MockMultipartFile file = new MockMultipartFile("image",
+                "test.png",
+                "image/png",
+                new FileInputStream(resource.getAbsoluteFile()));
+
+        //Json 요청 생성
+        List<String> filePermissions = new ArrayList<>();
+        filePermissions.add(OWNER_WRITE.getPermission());
+        filePermissions.add(OWNER_READ.getPermission());
+        filePermissions.add(PUBLIC_READ.getPermission());
+
+        String ownerDomain = "www.abc.com";
+        String userCode = "goodjwon@gmail.com";
+
+        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
+                .file(file)
+                .fileName(file.getOriginalFilename())
+                .userFilePermissions(filePermissions)
+                .ownerDomainCode(ownerDomain)
+                .ownerAuthenticationCode(userCode)
+                .build());
+
+        this.fileInfoRequest = FileInfoRequest.builder()
+                .filePhyName(response.getFileName())
+                .fileCheckSum(response.getCheckSum())
+                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
+                .ownerDomainCode(response.getOwnerDomainCode())
+                .build();
+    }
+
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
     void uploadShouldReturnMetadataNameWithJsonFile() throws Exception {
@@ -112,6 +146,8 @@ public class FileControllerTest {
         List<String> filePermissions = new ArrayList<>();
         filePermissions.add(OWNER_WRITE.getPermission());
         filePermissions.add(OWNER_READ.getPermission());
+        filePermissions.add(GROUP_READ.getPermission());
+        filePermissions.add(GROUP_WRITE.getPermission());
 
         List<String> filePermissionGroup = new ArrayList<>();
         filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");
@@ -146,6 +182,7 @@ public class FileControllerTest {
                 .andExpect(jsonPath("size").exists())
         ;
     }
+
 
     @Test
     @DisplayName("파일 저장시 일자에 맞는 디렉터리 구조로 저장 되는지 확인")
@@ -192,7 +229,7 @@ public class FileControllerTest {
 
         assertThat(result.getResponse().getStatus(), is(equalTo(200)));
         assertThat(result.getResponse().getContentAsByteArray().length, is(equalTo(13)));
-        assertThat(result.getResponse().getContentType(), is(equalTo("text/plain;charset=UTF-8")));
+        assertThat(result.getResponse().getContentType(), is(equalTo("application/json;charset=UTF-8")));
     }
 
     @Test
@@ -204,7 +241,7 @@ public class FileControllerTest {
     }
 
     @Test
-    @DisplayName("파일 사용자 정보를 DB에 입력 한다.")
+    @DisplayName("파일 사용자 정보가 없으면 예외 처리 한다.")
     void saveFileUserinfo() throws Exception {
         //given
         //when
@@ -213,7 +250,7 @@ public class FileControllerTest {
 
 
     @Test
-    @DisplayName("파일 메타정보 DB 입력")
+    @DisplayName("파일 메타정보 DB 가 없으면 예외 처리 한다.")
     void saveFileMetainfo() throws Exception {
         //given
         //when
@@ -248,21 +285,7 @@ public class FileControllerTest {
 
     }
 
-    @Test
-    @DisplayName("파일 권한에 열람 가능자 정보를 저장한다. ")
-    void testPermission() {
-        //given
-        //when
-        //then
-    }
 
-    @Test
-    @DisplayName("파일 권한에 열람 가능자 정보가 있으면 맞는지 확인 하고 다운로드 시킨다. ")
-    void groupPermissionHashKeyCorrectCaseCheck() {
-        //given
-        //when
-        //then
-    }
 
     @Test
     @DisplayName("파일 권한에 열람 가능자 정보를 확인 하고 틀릴경우 401 권한 없음 에러를 던진다. ")

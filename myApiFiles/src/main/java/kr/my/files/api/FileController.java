@@ -57,28 +57,6 @@ public class FileController {
     }
 
     /**
-     * TODO 다중파일 저장. 작업 중.
-     *
-     * @param files
-     * @return
-     */
-    @PostMapping("/upload-files-permission")
-    public ResponseEntity<FileMetadataResponse> uploadMultipleFiles(
-            @RequestParam("files") MultipartFile[] files,
-            @RequestPart(value = "metadata", required = false) UploadFileRequest fileRequest) {
-
-        fileRequest.addFiles(files);
-
-         Arrays.asList(files)
-                .stream()
-                .map(file -> fileStorageService.saveFile(fileRequest))
-                .collect(Collectors.toList());
-
-
-         return null;
-    }
-
-    /**
      * 파일을 정보를 요청한다.
      */
     @PostMapping("/file-info")
@@ -88,8 +66,6 @@ public class FileController {
 
         return ResponseEntity.ok(response);
     }
-
-
 
     /**
      * 파일을 정보를 전달 해서 파일을 다운로드 받는다.
@@ -102,26 +78,31 @@ public class FileController {
         // Load file as Resource
         Resource resource = fileStorageService.loadFileAsResource(fileInfoRequest);
 
-        // Try to determine file's content type
-        String contentType = null;
-        try {
-            File file = resource.getFile();
-            URLConnection connection = file.toURI().toURL().openConnection();
-            contentType = connection.getContentType();
-
-        } catch (IOException ex) {
-            logger.info("Could not determine file type.");
-        }
-
-        // Fallback to the default content type if type could not be determined
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    /**
+     * TODO 다중파일 저장. 작업 중.
+     *
+     * @param files
+     * @return
+     */
+    @PostMapping("/upload-files-permission")
+    public ResponseEntity<FileMetadataResponse> uploadMultipleFiles(
+            @RequestParam("files") MultipartFile[] files,
+            @RequestPart(value = "metadata", required = false) UploadFileRequest fileRequest) {
+
+        fileRequest.addFiles(files);
+
+        Arrays.asList(files)
+                .stream()
+                .map(file -> fileStorageService.saveFile(fileRequest))
+                .collect(Collectors.toList());
+
+
+        return null;
     }
 
 }
