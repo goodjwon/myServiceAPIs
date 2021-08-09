@@ -295,6 +295,22 @@ public class FileControllerTest {
         //then
     }
 
+    @Test
+    @DisplayName("그룹이 있으면 그룹 권한이 있어야 한다. 그렇지 않을 경우 유효하지 않은 에러 출력")
+    void hasGroupMustBeGroupPermission(){
+        //given
+        //when
+        //then
+    }
+
+
+    @Test
+    @DisplayName("그룹권한이 있으면 그룹이  있어야 한다. 그렇지 않을 경우 유효하지 않은 에러 출력")
+    void hasGroupPermissionMustBeGroup(){
+        //given
+        //when
+        //then
+    }
 
 
 }

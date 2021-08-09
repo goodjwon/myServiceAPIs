@@ -187,6 +187,11 @@ public class FileStorageService {
         return fileOwner;
     }
 
+    /**
+     * 추가로 access 할 수 있는 그룹을 지정한다.
+     * @param idAccessCode
+     * @return
+     */
     private List<FilePermissionGroup> addUserAccessCode(List<String> idAccessCode){
         return collectionToStream(idAccessCode)
                 .map(a ->
@@ -196,6 +201,11 @@ public class FileStorageService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 기본으로 올린사람의 권한은 보장한다.
+     * @param fileRequest
+     * @return
+     */
     private UploadFileRequest addDefaultPermission(UploadFileRequest fileRequest) {
         if(fileRequest.getUserFilePermissions().isEmpty()){
             List<String> filePermissions = new ArrayList<>();
@@ -214,17 +224,11 @@ public class FileStorageService {
      */
     private String storeFile(UploadFileRequest request, String uuidFileName, String subPath) {
         try {
-            request.getUserFilePermissions().forEach(filePermission->{
-                if(filePermission.equals(PUBLIC_READ.getPermission())){
-                    this.fileStorageLocation = Paths.get(fileStorageProperties.getPublicSpaceDir())
-                            .toAbsolutePath()
-                            .normalize();
-                } else {
-                    this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
-                            .toAbsolutePath()
-                            .normalize();
-                }
-            });
+
+            String rootPath = isPublicPermission(request)?fileStorageProperties.getPublicSpaceDir():fileStorageProperties.getUploadDir();
+            this.fileStorageLocation = Paths.get(rootPath)
+                    .toAbsolutePath()
+                    .normalize();
 
             Path targetLocation = this.fileStorageLocation.resolve(subPath); //경로 만들기.
 
@@ -245,19 +249,34 @@ public class FileStorageService {
         }
     }
 
-    //todo 환경변수로 처리 할 수 있도록 수정.
-    private String getFileDownloadUri(UploadFileRequest request, String fullPath){
-        final String[] result = {"/file-download/"};
-
+    /**
+     * 요청에 public 인자가 있는지 점검한다.
+     * @param request
+     * @return public 인지 아닌지 리턴
+     */
+    private boolean isPublicPermission(UploadFileRequest request){
+        final boolean[] result = {false};
         request.getUserFilePermissions().forEach(filePermission->{
             if(filePermission.equals(PUBLIC_READ.getPermission())){
-                result[0] = this.fileStorageProperties.getDownloadPublicPath().concat(fullPath);
-            } else {
-                result[0] = this.fileStorageProperties.getDownloadPath().concat(fullPath);
+                result[0] = true;
             }
         });
 
         return result[0];
+    }
+
+    /**
+     * download path를 정한다.
+     * @param request
+     * @param fullPath
+     * @return
+     */
+    private String getFileDownloadUri(UploadFileRequest request, String fullPath){
+        String downloadPath = isPublicPermission(request)?
+                this.fileStorageProperties.getDownloadPublicPath().concat(fullPath):
+                this.fileStorageProperties.getDownloadPath().concat(fullPath);
+
+        return downloadPath;
     }
 
     /**
@@ -300,11 +319,8 @@ public class FileStorageService {
         return digestFileName;
     }
 
-
-
     /**
      * 파일 mine type을 확인 한다.
-     *
      * @param file
      * @return
      * @throws IOException
@@ -313,6 +329,5 @@ public class FileStorageService {
         String mimeType = new Tika().detect(file.getInputStream());
         return mimeType;
     }
-
 
 }
