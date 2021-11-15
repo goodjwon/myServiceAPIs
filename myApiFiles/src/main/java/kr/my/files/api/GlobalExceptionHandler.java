@@ -1,7 +1,8 @@
-package kr.my.files.exception;
+package kr.my.files.api;
 
 import kr.my.files.errors.ErrorCode;
 import kr.my.files.errors.ErrorResponse;
+import kr.my.files.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
