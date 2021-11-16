@@ -12,11 +12,11 @@ import java.util.stream.Stream;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class StringUtils {
-    public static String stringToChecksum(String arg)  {
+    public static String makeMD5StringToChecksum(String arg)  {
         return DigestUtils.md5Hex( arg );
     }
 
-    public static String stringToChecksumSha256(String arg){
+    public static String makeStringToChecksumSha256(String arg){
         return DigestUtils.sha256Hex(arg);
     }
 

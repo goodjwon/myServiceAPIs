@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 import org.apache.tika.Tika;
 
 import static kr.my.files.commons.utils.StringUtils.collectionToStream;
-import static kr.my.files.commons.utils.StringUtils.stringToChecksum;
+import static kr.my.files.commons.utils.StringUtils.makeMD5StringToChecksum;
 import static kr.my.files.enums.UserFilePermissions.*;
 
 @NoArgsConstructor
@@ -72,7 +72,7 @@ public class FileStorageService {
         String savePath = storeFile(fileRequest, uuidFileName, subPath);
         String fileDownloadUri = getFileDownloadUri(fileRequest, uuidFileName);
         String fileHash = getFileHash(fileRequest.getFile());
-        String doaminHash = stringToChecksum(fileRequest.getOwnerDomainCode());
+        String domainHash = makeMD5StringToChecksum(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
 
         MyFiles myFile = MyFiles.builder()
@@ -143,6 +143,11 @@ public class FileStorageService {
         }
     }
 
+    /**
+     * 소유자의 요청인지 확인
+     * @param fileInfoRequest
+     * @return
+     */
     private boolean isOwnerRequest(FileInfoRequest fileInfoRequest){
         boolean result = false;
         MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
@@ -170,8 +175,8 @@ public class FileStorageService {
 
         if(ownerInformationConfirmation(fileRequest) == null){
             fileOwner = fileOwnerRepository.save(FileOwner.builder()
-                    .ownerDomainCheckSum(stringToChecksum(fileRequest.getOwnerDomainCode()))
-                    .ownerAuthenticationCode(stringToChecksum(fileRequest.getOwnerAuthenticationCode()))
+                    .ownerDomainCheckSum(makeMD5StringToChecksum(fileRequest.getOwnerDomainCode()))
+                    .ownerAuthenticationCode(makeMD5StringToChecksum(fileRequest.getOwnerAuthenticationCode()))
                     .build()
             );
         }
@@ -182,8 +187,8 @@ public class FileStorageService {
     private FileOwner ownerInformationConfirmation(UploadFileRequest fileRequest){
         FileOwner fileOwner =  fileOwnerRepository
                 .findByOwnerDomainCheckSumAndOwnerAuthenticationCheckSum(
-                        stringToChecksum(fileRequest.getOwnerDomainCode()),
-                        stringToChecksum(fileRequest.getOwnerAuthenticationCode())).orElse(null);
+                        makeMD5StringToChecksum(fileRequest.getOwnerDomainCode()),
+                        makeMD5StringToChecksum(fileRequest.getOwnerAuthenticationCode())).orElse(null);
         return fileOwner;
     }
 
