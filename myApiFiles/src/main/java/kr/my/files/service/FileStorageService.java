@@ -10,10 +10,12 @@ import kr.my.files.entity.MyFiles;
 import kr.my.files.enums.FileStatus;
 import kr.my.files.exception.FileStorageException;
 import kr.my.files.exception.MyFileNotFoundException;
+import kr.my.files.exception.OverImagePixelException;
 import kr.my.files.exception.OwnerNotMeachedException;
 import kr.my.files.property.FileStorageProperties;
 import kr.my.files.dao.MyFilesRepository;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,7 @@ import static kr.my.files.enums.UserFilePermissions.*;
 
 @NoArgsConstructor
 @Service
+@Slf4j
 public class FileStorageService {
 
     private Path fileStorageLocation;
@@ -262,11 +265,32 @@ public class FileStorageService {
     /**
      * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
      */
-    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws Exception {
+    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
+
+
+        /**
+         * jpg, jpeg, png 는 아래와 같은 이미지 특징을 가진단다. (인터넷)
+         */
+        if (originalImage.getType() == BufferedImage.TYPE_INT_ARGB
+                || originalImage.getType() == BufferedImage.TYPE_INT_ARGB_PRE
+                || originalImage.getType() == BufferedImage.TYPE_3BYTE_BGR
+                || originalImage.getType() == BufferedImage.TYPE_BYTE_GRAY
+                || originalImage.getType() == BufferedImage.TYPE_BYTE_INDEXED
+
+        ) {
+
+        }
+        log.info(String.valueOf(originalImage.getType()));
+
+        if( originalImage.getWidth() > 3840){
+            throw new OverImagePixelException("3840 pixel over");
+        }
+
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Thumbnails.of(originalImage)
                 .size(targetWidth, targetHeight)
-                .outputFormat("JPEG")
+                .outputFormat(imageFormat)
                 .outputQuality(1)
                 .toOutputStream(outputStream);
         byte[] data = outputStream.toByteArray();
