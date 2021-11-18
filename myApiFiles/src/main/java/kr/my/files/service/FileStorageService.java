@@ -14,6 +14,7 @@ import kr.my.files.exception.OwnerNotMeachedException;
 import kr.my.files.property.FileStorageProperties;
 import kr.my.files.dao.MyFilesRepository;
 import lombok.NoArgsConstructor;
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -23,6 +24,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -37,6 +41,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.tika.Tika;
+
+import javax.imageio.ImageIO;
 
 import static kr.my.files.commons.utils.StringUtils.collectionToStream;
 import static kr.my.files.commons.utils.StringUtils.makeMD5StringToChecksum;
@@ -72,7 +78,6 @@ public class FileStorageService {
         String savePath = storeFile(fileRequest, uuidFileName, subPath);
         String fileDownloadUri = getFileDownloadUri(fileRequest, uuidFileName);
         String fileHash = getFileHash(fileRequest.getFile());
-        String domainHash = makeMD5StringToChecksum(fileRequest.getOwnerDomainCode());
         MultipartFile file = fileRequest.getFile();
 
         MyFiles myFile = MyFiles.builder()
@@ -253,6 +258,22 @@ public class FileStorageService {
             throw new FileStorageException("Could not store file. Please try again!");
         }
     }
+
+    /**
+     * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
+     */
+    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Thumbnails.of(originalImage)
+                .size(targetWidth, targetHeight)
+                .outputFormat("JPEG")
+                .outputQuality(1)
+                .toOutputStream(outputStream);
+        byte[] data = outputStream.toByteArray();
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+        return ImageIO.read(inputStream);
+    }
+
 
     /**
      * 요청에 public 인자가 있는지 점검한다.

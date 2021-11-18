@@ -94,6 +94,22 @@ r(Read) : 4 w(Write) : 2 x(Execute) : 1 r + w + x : 7
 
 #### 확장자: file 로 통일 (public 파일 제외)
 
+#### 이미지 리사이징
+JVM 힙 크기를 조정 산식 (대략적임)
+1. 이미지 로딩 가로 해상도 X 세로해상도 X 4 = byte
+2. 이미지 변환 해상도 = 이미지 로딩 해상도 
+3. 총 필요 메모리 = 로딩 해상도 + 변환 해상도
+   - 15000 x 15000 x 4 = 900M
+   - 900M + 900M = 1800M 
+   - 총 필요 heap memory 1800M
+   - 
+   
+> -Dthumbnailator.conserveMemoryWorkaround=trueJVM 옵션 을 추가하여 활성화할 수 있는 필요한 메모리를 줄이기 위한 임시 해결 방법(항상 작동하지 않을 수 있음 )이 있지만 최종 썸네일 품질이 저하될 수 있습니다.
+> at com.sun.imageio.plugins.jpeg.JPEGImageReader.readInternal(JPEGImageReader.java:1082)
+> at com.sun.imageio.plugins.jpeg.JPEGImageReader.read(JPEGImageReader.java:1050)
+
+
+
 #### 원본파일 정보는 DB에 별도 저장
 
 #### 말단 디렉터리에 파일 정보 저장 : 원본파일.확장자 => MD5.file
