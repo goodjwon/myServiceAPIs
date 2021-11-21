@@ -286,6 +286,10 @@ public class FileStorageService {
             throw new OverImagePixelException("3840 pixel over");
         }
 
+        if( originalImage.getHeight() > 3840){
+            throw new OverImagePixelException("3840 pixel over");
+        }
+
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Thumbnails.of(originalImage)
