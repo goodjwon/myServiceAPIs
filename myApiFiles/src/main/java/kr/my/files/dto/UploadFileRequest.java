@@ -6,6 +6,8 @@ import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -31,6 +33,14 @@ public class UploadFileRequest {
     private List <String> userFilePermissions;
     @NotEmpty
     private List<String> idAccessCodes;
+
+    /*이미지 관련 요청 속성*/
+    @PositiveOrZero
+    private int maxWith;
+    @PositiveOrZero
+    private int maxHeight;
+    @Size(max = 5)
+    private List<Integer> thumbnailWiths;
 
     public void addFile(MultipartFile file){
         this.file = file;
