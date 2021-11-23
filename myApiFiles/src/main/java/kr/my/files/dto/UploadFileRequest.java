@@ -32,6 +32,8 @@ public class UploadFileRequest {
     @NotEmpty
     private List<String> idAccessCodes;
 
+    private ImageRequestType imageRequestType;
+
     public void addFile(MultipartFile file){
         this.file = file;
     }
