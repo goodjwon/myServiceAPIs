@@ -21,7 +21,6 @@ import java.util.List;
 public class UploadFileRequest {
     @NotEmpty
     private String fileName;
-    @NotEmpty
     private MultipartFile file;
     private MultipartFile[] files;
     @NotEmpty

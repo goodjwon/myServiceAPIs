@@ -4,7 +4,6 @@ package kr.my.files.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
-import kr.my.files.dto.ImageRequestType;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +31,7 @@ import java.util.List;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static kr.my.files.enums.UserFilePermissions.*;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -193,32 +191,31 @@ public class FileControllerTest {
     void uploadImageFileShouldReturnMetadataNameWithJsonFile() throws Exception {
         //Given 파일생성
         File resource = new ClassPathResource("data/sample-image/IMG_3421.jpg").getFile();
-        MockMultipartFile file = new MockMultipartFile("image",
-                "test.png",
-                "image/png",
+
+        MockMultipartFile file = new MockMultipartFile("file", resource.getName(),
+                IMAGE_JPEG_VALUE,
                 new FileInputStream(resource.getAbsoluteFile()));
 
-        //Json 요청 생성
+        //Json 요청 생성 - 파일 권한 생성
         List<String> filePermissions = new ArrayList<>();
         filePermissions.add(OWNER_WRITE.getPermission());
         filePermissions.add(OWNER_READ.getPermission());
         filePermissions.add(PUBLIC_READ.getPermission());
 
+        //Json 요청 생성 - 파일 그룹 생성
         List<String> filePermissionGroup = new ArrayList<>();
         filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");
         filePermissionGroup.add("f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7");
         filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a");
 
+        //Json 요청 생성 - 도메인 및 사용자 셋팅
         String ownerDomain = "www.abc.com";
         String userCode = "goodjwon@gmail.com";
 
-        ImageRequestType imageRequestType = ImageRequestType.builder()
-                .maxWith(1024)  //1024 이미지로 만든다.
-                .maxHeight(0)   //세로 사이즈는 원본에 비율에 따른다.
-                .thumbnailWith(200) //200 사이즈로 썸내일을 만든다.
-                .thumbnailHeight(0) //세로는 원본 비율을 유지 해서 만든다.
-                .build();
-
+        List<Integer> thumbnailWiths = new ArrayList<>();
+        thumbnailWiths.add(200);
+        thumbnailWiths.add(400);
+        thumbnailWiths.add(500);
 
         MockMultipartFile metadata = new MockMultipartFile(
                 "metadata",
@@ -231,10 +228,8 @@ public class FileControllerTest {
                                 .idAccessCodes(filePermissionGroup)
                                 .ownerDomainCode(ownerDomain)
                                 .ownerAuthenticationCode(userCode)
-                                .imageRequestType(imageRequestType)
                                 .build())
                         .getBytes(StandardCharsets.UTF_8));
-
         //then http multipart 요청
         mockMvc.perform(multipart("/upload-file-permission-json-file")
                         .file(file)      //실제 파일
