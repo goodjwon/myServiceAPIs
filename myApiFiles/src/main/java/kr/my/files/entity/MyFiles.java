@@ -35,7 +35,7 @@ public class MyFiles extends BaseTimeEntity {
     private String fileDownloadPath;
     @Column(name = "FILE_PATH", nullable = false, insertable = true, updatable = true, length = 1000)
     private String filePath;
-    @Column(name = "FILE_Size", nullable = false, insertable = true, updatable = true, length = 1000)
+    @Column(name = "FILE_SIZE", nullable = false, insertable = true, updatable = true, length = 1000)
     private Long fileSize;
     @Column(name = "FILE_STATUS", nullable = false, insertable = true, updatable = true, length = 50)
     @Enumerated(EnumType.STRING)

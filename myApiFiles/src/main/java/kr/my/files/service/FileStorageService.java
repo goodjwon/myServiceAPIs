@@ -71,6 +71,22 @@ public class FileStorageService {
 
     }
 
+    public void saveThumbnailImage(MyFiles parentFile, List<Integer> thumbnailSize){
+        parentFile.getFilePath();
+        parentFile.getFileDownloadPath();
+        parentFile.getFileContentType();
+        parentFile.getFilePhyName();
+        parentFile.getFileOwnerByUserCode();
+        parentFile.getFileStatus();
+        parentFile.getFileDownloadPath();
+
+        thumbnailSize.stream().forEach(i->{
+
+        });
+
+        myFilesRopository.save(null);
+    }
+
     /**
      *
      */
@@ -104,6 +120,8 @@ public class FileStorageService {
         return FileMetadataResponse.builder().myFiles(myFile).build();
 
     }
+
+
 
     /**
      * 파일 유니크 명을통해 파일 정보를 요청한다.
