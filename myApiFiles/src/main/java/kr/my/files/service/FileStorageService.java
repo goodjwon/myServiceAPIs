@@ -71,7 +71,7 @@ public class FileStorageService {
 
     }
 
-    public void saveThumbnailImage(MyFiles parentFile, List<Integer> thumbnailSize){
+    public void saveThumbnailImage(MyFiles parentFile, List<Integer> thumbnailSizeList){
         parentFile.getFilePath();
         parentFile.getFileDownloadPath();
         parentFile.getFileContentType();
@@ -80,11 +80,11 @@ public class FileStorageService {
         parentFile.getFileStatus();
         parentFile.getFileDownloadPath();
 
-        thumbnailSize.stream().forEach(i->{
-
+        thumbnailSizeList.stream().forEach(i->{
+            System.out.println(i);
         });
 
-        myFilesRopository.save(null);
+//        myFilesRopository.save(null);
     }
 
     /**
@@ -114,6 +114,10 @@ public class FileStorageService {
                 .postLinkType("")
                 .postLinked(0L)
                 .build();
+
+        if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().stream().count() > 0 ){
+            saveThumbnailImage(myFile, fileRequest.getThumbnailWiths());
+        }
 
         myFilesRopository.save(myFile);
 

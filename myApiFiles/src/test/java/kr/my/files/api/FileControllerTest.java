@@ -228,6 +228,7 @@ public class FileControllerTest {
                                 .idAccessCodes(filePermissionGroup)
                                 .ownerDomainCode(ownerDomain)
                                 .ownerAuthenticationCode(userCode)
+                                .thumbnailWiths(thumbnailWiths)
                                 .build())
                         .getBytes(StandardCharsets.UTF_8));
         //then http multipart 요청
