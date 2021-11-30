@@ -2,6 +2,7 @@ package kr.my.files.entity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.enums.FileStatus;
 import kr.my.files.enums.UserFilePermissions;
 import lombok.*;
@@ -15,7 +16,6 @@ import java.util.List;
  */
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "shareSeq")
 @Getter
 @Entity

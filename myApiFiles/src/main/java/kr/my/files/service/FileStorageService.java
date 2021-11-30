@@ -29,6 +29,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -80,8 +81,21 @@ public class FileStorageService {
         parentFile.getFileStatus();
         parentFile.getFileDownloadPath();
 
+        MyFiles subFileCommon = MyFiles.builder().build();
+
+        File rootImge = new File(parentFile.getFilePath());
+
         thumbnailSizeList.stream().forEach(i->{
             System.out.println(i);
+
+            try {
+                resizeImage(ImageIO.read(rootImge) , i, i, "jpg" );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+//            myFilesRopository.save(myFile);
         });
 
 //        myFilesRopository.save(null);
@@ -115,11 +129,11 @@ public class FileStorageService {
                 .postLinked(0L)
                 .build();
 
+        myFilesRopository.save(myFile);
+
         if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().stream().count() > 0 ){
             saveThumbnailImage(myFile, fileRequest.getThumbnailWiths());
         }
-
-        myFilesRopository.save(myFile);
 
         return FileMetadataResponse.builder().myFiles(myFile).build();
 
@@ -300,15 +314,17 @@ public class FileStorageService {
                 || originalImage.getType() == BufferedImage.TYPE_BYTE_INDEXED
 
         ) {
-
+            //
+            log.info("inside if ");
         }
         log.info(String.valueOf(originalImage.getType()));
+        log.info(String.valueOf(originalImage.getWidth()));
 
-        if( originalImage.getWidth() > 3840){
+        if( originalImage.getWidth() > 5000){
             throw new OverImagePixelException("3840 pixel over");
         }
 
-        if( originalImage.getHeight() > 3840){
+        if( originalImage.getHeight() > 5000){
             throw new OverImagePixelException("3840 pixel over");
         }
 
