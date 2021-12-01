@@ -83,13 +83,19 @@ public class FileStorageService {
 
         MyFiles subFileCommon = MyFiles.builder().build();
 
-        File rootImge = new File(parentFile.getFilePath());
+        File rootImage = new File(parentFile.getFilePath());
+
+        //outImage
+        File outImage = new File(parentFile.getFilePath());
 
         thumbnailSizeList.stream().forEach(i->{
+
+            log.info("########################################################");
             System.out.println(i);
+            log.info("########################################################");
 
             try {
-                resizeImage(ImageIO.read(rootImge) , i, i, "jpg" );
+                resizeImage(rootImage , outImage, i, i, "jpg" );
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -301,8 +307,9 @@ public class FileStorageService {
     /**
      * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
      */
-    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
+    private void resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
 
+        BufferedImage originalImage = ImageIO.read(rootImage);
 
         /**
          * jpg, jpeg, png 는 아래와 같은 이미지 특징을 가진단다. (인터넷)
@@ -329,15 +336,20 @@ public class FileStorageService {
         }
 
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Thumbnails.of(originalImage)
-                .size(targetWidth, targetHeight)
-                .outputFormat(imageFormat)
-                .outputQuality(1)
-                .toOutputStream(outputStream);
-        byte[] data = outputStream.toByteArray();
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-        return ImageIO.read(inputStream);
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        Thumbnails.of(originalImage)
+//                .size(300, 400)
+//                .outputFormat(imageFormat)
+//                .outputQuality(1)
+//                .toOutputStream(outputStream);
+
+        Thumbnails.of(rootImage).size(300, 400).outputFormat(imageFormat).toFile(outImage);
+
+//
+//        byte[] data = outputStream.toByteArray();
+//        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+
+//        return ImageIO.read(inputStream);
     }
 
 
