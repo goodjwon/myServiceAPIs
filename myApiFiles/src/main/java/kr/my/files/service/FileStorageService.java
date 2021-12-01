@@ -81,7 +81,6 @@ public class FileStorageService {
         parentFile.getFileStatus();
         parentFile.getFileDownloadPath();
 
-        MyFiles subFileCommon = MyFiles.builder().build();
 
         File rootImage = new File(parentFile.getFilePath());
 
@@ -96,6 +95,26 @@ public class FileStorageService {
 
             try {
                 resizeImage(rootImage , outImage, i, i, "jpg" );
+
+                MyFiles subFileCommon = MyFiles.builder()
+                        .fileDownloadPath(parentFile.getFileDownloadPath())
+                        .fileContentType(parentFile.getFileContentType())
+                        .fileHashCode(getFileHash(fileRequest.getFile())
+                        .fileOrgName(file.getOriginalFilename())
+                        .filePath(savePath)
+                        .fileSize(file.getSize())
+                        .fileStatus(FileStatus.Registered)
+                        .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
+                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
+                        .filePhyName(uuidFileName)
+                        .fileOwnerByUserCode(ownerCheckSum(fileRequest))
+                        .postLinkType("")
+                        .postLinked(0L)
+                        .build();
+                        build();
+
+
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
