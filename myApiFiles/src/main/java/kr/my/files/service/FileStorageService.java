@@ -27,10 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,20 +69,15 @@ public class FileStorageService {
 
     }
 
-    public void saveThumbnailImage(MyFiles parentFile, List<Integer> thumbnailSizeList){
-        parentFile.getFilePath();
-        parentFile.getFileDownloadPath();
-        parentFile.getFileContentType();
-        parentFile.getFilePhyName();
-        parentFile.getFileOwnerByUserCode();
-        parentFile.getFileStatus();
-        parentFile.getFileDownloadPath();
-
+    public void saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
 
         File rootImage = new File(parentFile.getFilePath());
 
-        //outImage
-        File outImage = new File(parentFile.getFilePath());
+        String uuidFileName = getUUIDFileName(rootImage.getName());
+        String subPath = getSubPath("yyyy/MM/dd/HH/mm");
+        String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
+
+        File outImage = new File(savePath);
 
         thumbnailSizeList.stream().forEach(i->{
 
@@ -96,22 +88,21 @@ public class FileStorageService {
             try {
                 resizeImage(rootImage , outImage, i, i, "jpg" );
 
-                MyFiles subFileCommon = MyFiles.builder()
-                        .fileDownloadPath(parentFile.getFileDownloadPath())
-                        .fileContentType(parentFile.getFileContentType())
-                        .fileHashCode(getFileHash(fileRequest.getFile())
-                        .fileOrgName(file.getOriginalFilename())
-                        .filePath(savePath)
-                        .fileSize(file.getSize())
-                        .fileStatus(FileStatus.Registered)
-                        .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
-                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
-                        .filePhyName(uuidFileName)
-                        .fileOwnerByUserCode(ownerCheckSum(fileRequest))
-                        .postLinkType("")
-                        .postLinked(0L)
-                        .build();
-                        build();
+//                MyFiles subFileCommon = MyFiles.builder()
+//                        .fileDownloadPath(parentFile.getFileDownloadPath())
+//                        .fileContentType(parentFile.getFileContentType())
+//                        .fileHashCode(getFileHash(fileRequest.getFile())
+//                        .fileOrgName(file.getOriginalFilename())
+//                        .filePath(savePath)
+//                        .fileSize(file.getSize())
+//                        .fileStatus(FileStatus.Registered)
+//                        .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
+//                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
+//                        .filePhyName(uuidFileName)
+//                        .fileOwnerByUserCode(ownerCheckSum(fileRequest))
+//                        .postLinkType("")
+//                        .postLinked(0L)
+//                        .build();
 
 
 
@@ -130,37 +121,49 @@ public class FileStorageService {
      *
      */
     public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
+        MyFiles myFile = null;
 
-        String uuidFileName = getUUIDFileName(fileRequest.getFile());
-        String subPath = getSubPath("yyyy/MM/dd/HH/mm");
-        String savePath = storeFile(fileRequest, uuidFileName, subPath);
-        String fileDownloadUri = getFileDownloadUri(fileRequest, uuidFileName);
-        String fileHash = getFileHash(fileRequest.getFile());
-        MultipartFile file = fileRequest.getFile();
+        try {
 
-        MyFiles myFile = MyFiles.builder()
-                .fileDownloadPath(fileDownloadUri)
-                .fileContentType(file.getContentType())
-                .fileHashCode(fileHash)
-                .fileOrgName(file.getOriginalFilename())
-                .filePath(savePath)
-                .fileSize(file.getSize())
-                .fileStatus(FileStatus.Registered)
-                .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
-                .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
-                .filePhyName(uuidFileName)
-                .fileOwnerByUserCode(ownerCheckSum(fileRequest))
-                .postLinkType("")
-                .postLinked(0L)
-                .build();
 
-        myFilesRopository.save(myFile);
+            String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
+            String subPath = getSubPath("yyyy/MM/dd/HH/mm");
+            String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
+            String fileDownloadUri = getFileDownloadUri(fileRequest, uuidFileName);
+            String fileHash = getFileHash(fileRequest.getFile());
+            MultipartFile file = fileRequest.getFile();
 
-        if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().stream().count() > 0 ){
-            saveThumbnailImage(myFile, fileRequest.getThumbnailWiths());
+            myFile = MyFiles.builder()
+                    .fileDownloadPath(fileDownloadUri)
+                    .fileContentType(file.getContentType())
+                    .fileHashCode(fileHash)
+                    .fileOrgName(file.getOriginalFilename())
+                    .filePath(savePath)
+                    .fileSize(file.getSize())
+                    .fileStatus(FileStatus.Registered)
+                    .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
+                    .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
+                    .filePhyName(uuidFileName)
+                    .fileOwnerByUserCode(ownerCheckSum(fileRequest))
+                    .postLinkType("")
+                    .postLinked(0L)
+                    .build();
+
+            myFilesRopository.save(myFile);
+
+            if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().stream().count() > 0) {
+                saveThumbnailImage(myFile, fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths());
+            }
+
+            return FileMetadataResponse.builder().myFiles(myFile).build();
+
+
+
+        }catch(IOException e){
+            e.printStackTrace();
         }
 
-        return FileMetadataResponse.builder().myFiles(myFile).build();
+        return new FileMetadataResponse();
 
     }
 
@@ -293,13 +296,19 @@ public class FileStorageService {
 
     /**
      * 업로드된 파일을 지정된 경로에 저장한다.
-     * @param request
+     * @param userFilePermissions
      * @return 저장된 경로를 반환한다.
      */
-    private String storeFile(UploadFileRequest request, String uuidFileName, String subPath) {
+    private String storeFile(InputStream fileInputStream,
+                             List<String> userFilePermissions,
+                             String uuidFileName,
+                             String subPath) {
         try {
 
-            String rootPath = isPublicPermission(request)?fileStorageProperties.getPublicSpaceDir():fileStorageProperties.getUploadDir();
+            String rootPath =
+                    isPublicPermission(userFilePermissions)?
+                            fileStorageProperties.getPublicSpaceDir():fileStorageProperties.getUploadDir();
+
             this.fileStorageLocation = Paths.get(rootPath)
                     .toAbsolutePath()
                     .normalize();
@@ -314,7 +323,7 @@ public class FileStorageService {
             Path savePath = targetLocation.resolve(uuidFileName);
 
             //파일 저장하기
-            Files.copy(request.getFile().getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(fileInputStream, savePath, StandardCopyOption.REPLACE_EXISTING);
 
             return savePath.toString();
 
@@ -374,12 +383,12 @@ public class FileStorageService {
 
     /**
      * 요청에 public 인자가 있는지 점검한다.
-     * @param request
+     * @param userFilePermissions
      * @return public 인지 아닌지 리턴
      */
-    private boolean isPublicPermission(UploadFileRequest request){
+    private boolean isPublicPermission(List<String> userFilePermissions){
         final boolean[] result = {false};
-        request.getUserFilePermissions().forEach(filePermission->{
+        userFilePermissions.forEach(filePermission->{
             if(filePermission.equals(PUBLIC_READ.getPermission())){
                 result[0] = true;
             }
@@ -395,11 +404,26 @@ public class FileStorageService {
      * @return
      */
     private String getFileDownloadUri(UploadFileRequest request, String fullPath){
-        String downloadPath = isPublicPermission(request)?
+        String downloadPath = isPublicPermission(request.getUserFilePermissions())?
                 this.fileStorageProperties.getDownloadPublicPath().concat(fullPath):
                 this.fileStorageProperties.getDownloadPath().concat(fullPath);
 
         return downloadPath;
+    }
+
+    /**
+     * multipart to File
+     * @param multipart
+     * @return
+     * @throws IllegalStateException
+     * @throws IOException
+     */
+    private File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException
+    {
+        File convFile = new File( multipart.getOriginalFilename());
+        multipart.transferTo(convFile);
+
+        return convFile;
     }
 
     /**
@@ -414,13 +438,14 @@ public class FileStorageService {
 
     /**
      * 파일명 저장하기.
-     * @param file
+     * @param fileName
      * @return uuid 로 파일명이 변경된 파일명 리턴.
      * @throws IOException
      */
-    private String getUUIDFileName(MultipartFile file) {
+    private String getUUIDFileName(String  fileName) {
         String ext = FilenameUtils.getExtension(
-                StringUtils.cleanPath(file.getOriginalFilename()));
+                StringUtils.cleanPath(fileName));
+
         String uuidFileName = UUID.randomUUID().toString();
 
         return uuidFileName.concat(".").concat(ext);
