@@ -57,82 +57,6 @@ public class FileControllerTest {
     @Autowired
     FileStorageService fileStorageService;
 
-    private FileInfoRequest fileInfoRequest;
-
-
-    @DisplayName("file, permission.json 파일 submit 테스트")
-    @BeforeAll
-    void uploadBefore() throws Exception {
-        //Given 파일생성
-        MockMultipartFile file = new MockMultipartFile("file", "hello.txt",
-                TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
-
-
-        //Json 요청 생성
-        List<String> filePermissions = new ArrayList<>();
-        filePermissions.add(OWNER_WRITE.getPermission());
-        filePermissions.add(OWNER_READ.getPermission());
-
-        List<String> filePermissionGroup = new ArrayList<>();
-        filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");
-        filePermissionGroup.add("f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7");
-        filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a");
-
-        String ownerDomain = "www.abc.com";
-        String userCode = "goodjwon@gmail.com";
-
-
-        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
-                .file(file)
-                .fileName(file.getOriginalFilename())
-                .userFilePermissions(filePermissions)
-                .idAccessCodes(filePermissionGroup)
-                .ownerDomainCode(ownerDomain)
-                .ownerAuthenticationCode(userCode)
-                .build());
-
-        this.fileInfoRequest = FileInfoRequest.builder()
-                .filePhyName(response.getFileName())
-                .fileCheckSum(response.getCheckSum())
-                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
-                .ownerDomainCode(response.getOwnerDomainCode())
-                .build();
-    }
-
-
-    @BeforeAll
-    void uploadPublicPermissionBefore() throws Exception {
-        //Given 파일생성
-        File resource = new ClassPathResource("data/sample-image/IMG_3421.jpg").getFile();
-        MockMultipartFile file = new MockMultipartFile("image",
-                "test.png",
-                "image/png",
-                new FileInputStream(resource.getAbsoluteFile()));
-
-        //Json 요청 생성
-        List<String> filePermissions = new ArrayList<>();
-        filePermissions.add(OWNER_WRITE.getPermission());
-        filePermissions.add(OWNER_READ.getPermission());
-        filePermissions.add(PUBLIC_READ.getPermission());
-
-        String ownerDomain = "www.abc.com";
-        String userCode = "goodjwon@gmail.com";
-
-        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
-                .file(file)
-                .fileName(file.getOriginalFilename())
-                .userFilePermissions(filePermissions)
-                .ownerDomainCode(ownerDomain)
-                .ownerAuthenticationCode(userCode)
-                .build());
-
-        this.fileInfoRequest = FileInfoRequest.builder()
-                .filePhyName(response.getFileName())
-                .fileCheckSum(response.getCheckSum())
-                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
-                .ownerDomainCode(response.getOwnerDomainCode())
-                .build();
-    }
 
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
@@ -265,10 +189,14 @@ public class FileControllerTest {
     @Test
     @DisplayName("파일요청정보를 수신하고 적절한 권한이 부여되어 있으면 정보를 전달 한다.")
     void getFileInfo() throws Exception {
+        //given
+        FileInfoRequest fileInfoRequest = uploadBefore();
+
+        //when then
         mockMvc.perform(post("/file-info")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaTypes.HAL_JSON)
-                .content(objectMapper.writeValueAsString(this.fileInfoRequest)))
+                .content(objectMapper.writeValueAsString(fileInfoRequest)))
                 .andDo(print())
                 .andExpect(status().is2xxSuccessful())
                 ;
@@ -277,12 +205,14 @@ public class FileControllerTest {
     @Test
     @DisplayName("파일에 대해서 다운로드 정보를 수신하고 파일을 내려 받는다.")
     void downloadFile() throws Exception {
-        //given file request info
+        //given
+        FileInfoRequest fileInfoRequest = uploadBefore();
+
         //when  file owner check
         //then  file download
         MvcResult result = mockMvc.perform(post("/file-download")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(this.fileInfoRequest)))
+                .content(objectMapper.writeValueAsString(fileInfoRequest)))
                 .andExpect(status().is(200))
                 .andExpect(header().string("Accept-Ranges", "bytes"))
                 .andDo(print())
@@ -373,9 +303,74 @@ public class FileControllerTest {
         //then
     }
 
+    private FileInfoRequest uploadBefore() throws Exception {
+        //Given 파일생성
+        MockMultipartFile file = new MockMultipartFile("file", "hello.txt",
+                TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
 
 
+        //Json 요청 생성
+        List<String> filePermissions = new ArrayList<>();
+        filePermissions.add(OWNER_WRITE.getPermission());
+        filePermissions.add(OWNER_READ.getPermission());
+
+        List<String> filePermissionGroup = new ArrayList<>();
+        filePermissionGroup.add("$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju");
+        filePermissionGroup.add("f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7");
+        filePermissionGroup.add("fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a");
+
+        String ownerDomain = "www.abc.com";
+        String userCode = "goodjwon@gmail.com";
 
 
+        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
+                .file(file)
+                .fileName(file.getOriginalFilename())
+                .userFilePermissions(filePermissions)
+                .idAccessCodes(filePermissionGroup)
+                .ownerDomainCode(ownerDomain)
+                .ownerAuthenticationCode(userCode)
+                .build());
 
+        return  FileInfoRequest.builder()
+                    .filePhyName(response.getFileName())
+                    .fileCheckSum(response.getCheckSum())
+                    .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
+                    .ownerDomainCode(response.getOwnerDomainCode())
+                    .build();
+    }
+
+
+    private FileInfoRequest uploadPublicPermissionBefore() throws Exception {
+        //Given 파일생성
+        File resource = new ClassPathResource("data/sample-image/IMG_3421.jpg").getFile();
+        MockMultipartFile file = new MockMultipartFile("image",
+                "test.jpg",
+                "image/jpg",
+                new FileInputStream(resource.getAbsoluteFile()));
+
+        //Json 요청 생성
+        List<String> filePermissions = new ArrayList<>();
+        filePermissions.add(OWNER_WRITE.getPermission());
+        filePermissions.add(OWNER_READ.getPermission());
+        filePermissions.add(PUBLIC_READ.getPermission());
+
+        String ownerDomain = "www.abc.com";
+        String userCode = "goodjwon@gmail.com";
+
+        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
+                .file(file)
+                .fileName(file.getOriginalFilename())
+                .userFilePermissions(filePermissions)
+                .ownerDomainCode(ownerDomain)
+                .ownerAuthenticationCode(userCode)
+                .build());
+
+       return FileInfoRequest.builder()
+                .filePhyName(response.getFileName())
+                .fileCheckSum(response.getCheckSum())
+                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
+                .ownerDomainCode(response.getOwnerDomainCode())
+                .build();
+    }
 }
