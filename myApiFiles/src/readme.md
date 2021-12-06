@@ -183,22 +183,41 @@ file.protect-space-dir= D${user.home}/Download
         "컨텐츠사이즈" : [1024, 0]
         
     },
-    {
-        "fileName":"e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        "fileDownloadUri":"http://localhost:8080/downloadFile/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        "fileType":"text/plain",
-        "originFileName":"hello.txt",
-        "hashName":"65a8e27d8879283831b664bd8b7f0ad4",
-        "size":13,
-        "filePermissions":["OWNER_WRITE","OWNER_READ"],
-        "filePermissionGroups":[
-            {"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},
-            {"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},
-            {"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]
-     }
      
 ```
-
+``` json
+   {
+   "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
+   "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
+   "fileName":"58262f09-8209-400d-8c67-c27d4f7c82a5.jpg",
+   "fileDownloadUri":"/public-file-download/58262f09-8209-400d-8c67-c27d4f7c82a5.jpg",
+   "fileType":"image/jpeg",
+   "originFileName":"IMG_3421.jpg",
+   "thumbnail":[
+        "":"",
+        "":"",
+        "":""
+   ],
+   "checkSum":"25285cef31548d48cf98a8dba896eab0",
+   "size":2007265,
+   "filePermissions":[
+      "owner:write",
+      "owner:read",
+      "public:read"
+   ],
+   "filePermissionGroups":[
+      {
+         "idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"
+      },
+      {
+         "idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"
+      },
+      {
+         "idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"
+      }
+   ]
+}
+```
 
 ### 테스트 방법
 #### Junit Test Case
