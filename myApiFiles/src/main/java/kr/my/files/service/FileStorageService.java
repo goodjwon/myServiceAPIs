@@ -333,7 +333,7 @@ public class FileStorageService {
      */
     private void resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
 
-        BufferedImage originalImage = ImageIO.read(rootImage);
+        BufferedImage originalImage = ImageIO.read(rootImage); //todo 세로 가로 구분 하지 못하는 것 보정 필요.
 
         /**
          * jpg, jpeg, png 는 아래와 같은 이미지 특징을 가진단다. (인터넷)
