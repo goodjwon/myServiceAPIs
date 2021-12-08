@@ -80,10 +80,9 @@ public class FileStorageService {
             String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
             File outImage = new File(savePath);
             System.out.println(i);
-            log.info("########################################################");
 
             try {
-                resizeImage(rootImage , outImage, i, i, "jpg" );
+                resizeImage(rootImage , outImage, i, 0, "jpg" );
 
 //                MyFiles subFileCommon = MyFiles.builder()
 //                        .fileDownloadPath(parentFile.getFileDownloadPath())
@@ -347,10 +346,8 @@ public class FileStorageService {
 
         ) {
             //
-            log.info("inside if ");
+            log.info("originalImage.getType() is "+originalImage.getType());
         }
-        log.info(String.valueOf(originalImage.getType()));
-        log.info(String.valueOf(originalImage.getWidth()));
 
         if( originalImage.getWidth() > 5000){
             throw new OverImagePixelException("3840 pixel over");
@@ -360,6 +357,15 @@ public class FileStorageService {
             throw new OverImagePixelException("3840 pixel over");
         }
 
+        double widthRatio  = (double)targetWidth / (double)originalImage.getWidth();
+        int imageHeight = targetHeight > 0 ? targetHeight : (int)(originalImage.getHeight() * widthRatio);
+
+        log.info("originalImage.getType() >> "+String.valueOf(originalImage.getType()));
+        log.info("originalImage.getWidth() >> "+String.valueOf(originalImage.getWidth()));
+        log.info("originalImage.getHeight() >> "+ String.valueOf(originalImage.getHeight()));
+        log.info("widthRatio >> "+ widthRatio);
+        log.info("targetWidth >> "+ targetWidth + " imageHeight >> "+imageHeight);
+
 
 //        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 //        Thumbnails.of(originalImage)
@@ -368,7 +374,7 @@ public class FileStorageService {
 //                .outputQuality(1)
 //                .toOutputStream(outputStream);
 
-        Thumbnails.of(rootImage).size(300, 400).outputFormat(imageFormat).toFile(outImage);
+        Thumbnails.of(rootImage).size(targetWidth, imageHeight).outputFormat(imageFormat).toFile(outImage);
 
 //
 //        byte[] data = outputStream.toByteArray();
