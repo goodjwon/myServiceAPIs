@@ -72,16 +72,13 @@ public class FileStorageService {
     public void saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
 
         File rootImage = new File(parentFile.getFilePath());
-
-        String uuidFileName = getUUIDFileName(rootImage.getName());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
-        String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
-
-        File outImage = new File(savePath);
 
         thumbnailSizeList.stream().forEach(i->{
-
             log.info("########################################################");
+            String uuidFileName = getThumbnailName(rootImage.getName(), i.toString());
+            String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
+            File outImage = new File(savePath);
             System.out.println(i);
             log.info("########################################################");
 
@@ -449,6 +446,22 @@ public class FileStorageService {
         String uuidFileName = UUID.randomUUID().toString();
 
         return uuidFileName.concat(".").concat(ext);
+    }
+
+    /**
+     * 사이즈에 맞추어 _사이즈 형태로 반환한다.
+     * @param originalFileName
+     * @param imageSize
+     * @return
+     */
+    private String getThumbnailName(String  originalFileName, String imageSize) {
+        String ext = FilenameUtils.getExtension(
+                StringUtils.cleanPath(originalFileName));
+
+        String thumbnailName = FilenameUtils.getBaseName(
+                StringUtils.cleanPath(originalFileName));
+
+        return thumbnailName.concat("_").concat(imageSize).concat(".").concat(ext);
     }
 
     /**
