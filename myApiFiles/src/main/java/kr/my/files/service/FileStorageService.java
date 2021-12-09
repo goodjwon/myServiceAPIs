@@ -1,5 +1,11 @@
 package kr.my.files.service;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import kr.my.files.dao.FileOwnerRepository;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
@@ -78,27 +84,29 @@ public class FileStorageService {
             log.info("########################################################");
             String uuidFileName = getThumbnailName(rootImage.getName(), i.toString());
             String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
+            String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
+            getFileHash(fileRequest.getFile());
             File outImage = new File(savePath);
             System.out.println(i);
 
             try {
-                resizeImage(rootImage , outImage, i, 0, "jpg" );
+                outImage= resizeImage(rootImage , outImage, i, 0, "jpg" );
 
-//                MyFiles subFileCommon = MyFiles.builder()
-//                        .fileDownloadPath(parentFile.getFileDownloadPath())
-//                        .fileContentType(parentFile.getFileContentType())
-//                        .fileHashCode(getFileHash(fileRequest.getFile())
-//                        .fileOrgName(file.getOriginalFilename())
-//                        .filePath(savePath)
-//                        .fileSize(file.getSize())
-//                        .fileStatus(FileStatus.Registered)
-//                        .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
-//                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
-//                        .filePhyName(uuidFileName)
-//                        .fileOwnerByUserCode(ownerCheckSum(fileRequest))
-//                        .postLinkType("")
-//                        .postLinked(0L)
-//                        .build();
+                MyFiles subFileCommon = MyFiles.builder()
+                        .fileDownloadPath(fileDownloadUri)
+                        .fileContentType(parentFile.getFileContentType())
+                        .fileHashCode(getFileHash(outImage.))
+                        .fileOrgName(file.getOriginalFilename())
+                        .filePath(savePath)
+                        .fileSize(file.getSize())
+                        .fileStatus(FileStatus.Registered)
+                        .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
+                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
+                        .filePhyName(uuidFileName)
+                        .fileOwnerByUserCode(ownerCheckSum(fileRequest))
+                        .postLinkType("")
+                        .postLinked(0L)
+                        .build();
 
 
 
@@ -117,19 +125,15 @@ public class FileStorageService {
      *
      */
     public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
-        MyFiles myFile = null;
-
         try {
-
-
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
-            String fileDownloadUri = getFileDownloadUri(fileRequest, uuidFileName);
+            String fileDownloadUri = getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
             String fileHash = getFileHash(fileRequest.getFile());
             MultipartFile file = fileRequest.getFile();
 
-            myFile = MyFiles.builder()
+            MyFiles myFile = MyFiles.builder()
                     .fileDownloadPath(fileDownloadUri)
                     .fileContentType(file.getContentType())
                     .fileHashCode(fileHash)
@@ -153,14 +157,10 @@ public class FileStorageService {
 
             return FileMetadataResponse.builder().myFiles(myFile).build();
 
-
-
         }catch(IOException e){
             e.printStackTrace();
         }
-
         return new FileMetadataResponse();
-
     }
 
 
@@ -171,15 +171,14 @@ public class FileStorageService {
      * @return
      */
     public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest){
+        if(!isOwnerRequest(infoRequest)){
+            throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
+        }
 
-            if(!isOwnerRequest(infoRequest)){
-                throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
-            }
-            MyFiles files = myFilesRopository.findByFilePhyNameAndFileHashCode(
-                    infoRequest.getFilePhyName(),
-                    infoRequest.getFileCheckSum())
-                    .orElseThrow(() ->
-                            new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
+        MyFiles files = myFilesRopository.findByFilePhyNameAndFileHashCode(
+                infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
+                .orElseThrow(() ->
+                        new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
 
         return FileMetadataResponse.builder().myFiles(files).build();
     }
@@ -331,23 +330,8 @@ public class FileStorageService {
     /**
      * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
      */
-    private void resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
-
+    private File resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
         BufferedImage originalImage = ImageIO.read(rootImage); //todo 세로 가로 구분 하지 못하는 것 보정 필요.
-
-        /**
-         * jpg, jpeg, png 는 아래와 같은 이미지 특징을 가진단다. (인터넷)
-         */
-        if (originalImage.getType() == BufferedImage.TYPE_INT_ARGB
-                || originalImage.getType() == BufferedImage.TYPE_INT_ARGB_PRE
-                || originalImage.getType() == BufferedImage.TYPE_3BYTE_BGR
-                || originalImage.getType() == BufferedImage.TYPE_BYTE_GRAY
-                || originalImage.getType() == BufferedImage.TYPE_BYTE_INDEXED
-
-        ) {
-            //
-            log.info("originalImage.getType() is "+originalImage.getType());
-        }
 
         if( originalImage.getWidth() > 5000){
             throw new OverImagePixelException("3840 pixel over");
@@ -366,23 +350,59 @@ public class FileStorageService {
         log.info("widthRatio >> "+ widthRatio);
         log.info("targetWidth >> "+ targetWidth + " imageHeight >> "+imageHeight);
 
+        Thumbnails.of(rootImage)
+                .size(targetWidth, imageHeight)
+                .outputFormat(imageFormat)
+                .outputQuality(1)
+                .toFile(outImage);
 
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        Thumbnails.of(originalImage)
-//                .size(300, 400)
-//                .outputFormat(imageFormat)
-//                .outputQuality(1)
-//                .toOutputStream(outputStream);
-
-        Thumbnails.of(rootImage).size(targetWidth, imageHeight).outputFormat(imageFormat).toFile(outImage);
-
-//
-//        byte[] data = outputStream.toByteArray();
-//        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-
-//        return ImageIO.read(inputStream);
+        return outImage;
     }
 
+    /**
+     * 이미지 파일정보에서 메다 정보를 추출하여 회신 한다.
+     * @param rootImage
+     * @return
+     * @throws ImageProcessingException
+     * @throws IOException
+     * @throws MetadataException
+     */
+    private Metadata getImageMetaInfo(File rootImage) throws ImageProcessingException, IOException, MetadataException {
+        Metadata metadata = ImageMetadataReader.readMetadata(rootImage);
+        Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+        int orientation = 1; // 회전정보, 1. 0도, 3. 180도, 6. 270도, 8. 90도 회전한 정보
+        double deggre = 0D;
+
+        if(directory != null){
+            orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION); // 회전정보
+        }
+
+        switch (orientation) {
+            case 6: deggre = 90D; break;
+            case 3: deggre = 180D;break;
+            case 8: deggre = 270D;break;
+            case 1: break;
+            default: orientation=1;break;
+        }
+
+        return metadata;
+    }
+
+    private void getImageType(File rootImage) throws IOException {
+        BufferedImage originalImage = ImageIO.read(rootImage);
+
+        /**
+         * jpg, jpeg, png 는 아래와 같은 이미지 특징을 가진단다. (인터넷)
+         */
+        if (originalImage.getType() == BufferedImage.TYPE_INT_ARGB
+                || originalImage.getType() == BufferedImage.TYPE_INT_ARGB_PRE
+                || originalImage.getType() == BufferedImage.TYPE_3BYTE_BGR
+                || originalImage.getType() == BufferedImage.TYPE_BYTE_GRAY
+                || originalImage.getType() == BufferedImage.TYPE_BYTE_INDEXED) {
+
+            log.info("originalImage.getType() is "+originalImage.getType());
+        }
+    }
 
     /**
      * 요청에 public 인자가 있는지 점검한다.
@@ -402,12 +422,12 @@ public class FileStorageService {
 
     /**
      * download path를 정한다.
-     * @param request
+     * @param userPermission
      * @param fullPath
      * @return
      */
-    private String getFileDownloadUri(UploadFileRequest request, String fullPath){
-        String downloadPath = isPublicPermission(request.getUserFilePermissions())?
+    private String getFileDownloadUri(List<String> userPermission, String fullPath){
+        String downloadPath = isPublicPermission(userPermission)?
                 this.fileStorageProperties.getDownloadPublicPath().concat(fullPath):
                 this.fileStorageProperties.getDownloadPath().concat(fullPath);
 
