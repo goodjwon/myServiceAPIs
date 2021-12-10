@@ -6,6 +6,7 @@ import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
+
 import kr.my.files.dao.FileOwnerRepository;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
@@ -24,6 +25,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -47,6 +52,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.tika.Tika;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.imageio.ImageIO;
 
@@ -76,7 +82,6 @@ public class FileStorageService {
     }
 
     public void saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
-
         File rootImage = new File(parentFile.getFilePath());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
 
@@ -85,7 +90,6 @@ public class FileStorageService {
             String uuidFileName = getThumbnailName(rootImage.getName(), i.toString());
             String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
-            getFileHash(fileRequest.getFile());
             File outImage = new File(savePath);
             System.out.println(i);
 
@@ -95,30 +99,25 @@ public class FileStorageService {
                 MyFiles subFileCommon = MyFiles.builder()
                         .fileDownloadPath(fileDownloadUri)
                         .fileContentType(parentFile.getFileContentType())
-                        .fileHashCode(getFileHash(outImage.))
-                        .fileOrgName(file.getOriginalFilename())
+                        .fileHashCode(getFileHash(outImage))
+                        .fileOrgName(parentFile.getFilePhyName())
                         .filePath(savePath)
-                        .fileSize(file.getSize())
+                        .fileSize(outImage.length())
                         .fileStatus(FileStatus.Registered)
-                        .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
-                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
+                        .userFilePermissions(parentFile.getUserFilePermissions())
+                        .filePermissionGroups(parentFile.getFilePermissionGroups())
                         .filePhyName(uuidFileName)
-                        .fileOwnerByUserCode(ownerCheckSum(fileRequest))
+                        .fileOwnerByUserCode(parentFile.getFileOwnerByUserCode())
                         .postLinkType("")
                         .postLinked(0L)
                         .build();
 
-
+                myFilesRopository.save(subFileCommon);
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
-//            myFilesRopository.save(myFile);
         });
-
-//        myFilesRopository.save(null);
     }
 
     /**
@@ -130,7 +129,7 @@ public class FileStorageService {
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
-            String fileHash = getFileHash(fileRequest.getFile());
+            String fileHash = getFileHash(multipartToFile(fileRequest.getFile()));
             MultipartFile file = fileRequest.getFile();
 
             MyFiles myFile = MyFiles.builder()
@@ -144,7 +143,7 @@ public class FileStorageService {
                     .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
                     .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                     .filePhyName(uuidFileName)
-                    .fileOwnerByUserCode(ownerCheckSum(fileRequest))
+                    .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
                     .postLinkType("")
                     .postLinked(0L)
                     .build();
@@ -236,14 +235,14 @@ public class FileStorageService {
     }
 
 
-    private FileOwner ownerCheckSum(UploadFileRequest fileRequest){
+    private FileOwner ownerCheckSum(String ownerDomainCode, String ownerAuthenticationCode){
 
-        FileOwner fileOwner = ownerInformationConfirmation(fileRequest);
+        FileOwner fileOwner = ownerInformationConfirmation(ownerDomainCode, ownerAuthenticationCode );
 
-        if(ownerInformationConfirmation(fileRequest) == null){
+        if(fileOwner == null){
             fileOwner = fileOwnerRepository.save(FileOwner.builder()
-                    .ownerDomainCheckSum(makeMD5StringToChecksum(fileRequest.getOwnerDomainCode()))
-                    .ownerAuthenticationCode(makeMD5StringToChecksum(fileRequest.getOwnerAuthenticationCode()))
+                    .ownerDomainCheckSum(makeMD5StringToChecksum(ownerDomainCode))
+                    .ownerAuthenticationCode(makeMD5StringToChecksum(ownerAuthenticationCode))
                     .build()
             );
         }
@@ -251,11 +250,11 @@ public class FileStorageService {
         return fileOwner;
     }
 
-    private FileOwner ownerInformationConfirmation(UploadFileRequest fileRequest){
+    private FileOwner ownerInformationConfirmation(String ownerDomainCode, String ownerAuthenticationCode){
         FileOwner fileOwner =  fileOwnerRepository
                 .findByOwnerDomainCheckSumAndOwnerAuthenticationCheckSum(
-                        makeMD5StringToChecksum(fileRequest.getOwnerDomainCode()),
-                        makeMD5StringToChecksum(fileRequest.getOwnerAuthenticationCode())).orElse(null);
+                        makeMD5StringToChecksum(ownerDomainCode),
+                        makeMD5StringToChecksum(ownerAuthenticationCode)).orElse(null);
         return fileOwner;
     }
 
@@ -302,7 +301,8 @@ public class FileStorageService {
 
             String rootPath =
                     isPublicPermission(userFilePermissions)?
-                            fileStorageProperties.getPublicSpaceDir():fileStorageProperties.getUploadDir();
+                            fileStorageProperties.getPublicSpaceDir():
+                            fileStorageProperties.getUploadDir();
 
             this.fileStorageLocation = Paths.get(rootPath)
                     .toAbsolutePath()
@@ -449,6 +449,29 @@ public class FileStorageService {
         return convFile;
     }
 
+
+    private MultipartFile fileToMultipartFile(File file) throws IOException {
+        FileItem fileItem = new DiskFileItem(
+                "originFile",
+                Files.probeContentType(file.toPath()),
+                false, file.getName(), (int) file.length(), file.getParentFile());
+
+        try {
+            InputStream input = new FileInputStream(file);
+            OutputStream os = fileItem.getOutputStream();
+            IOUtils.copy(input, os);
+            // Or faster..
+            // IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+        } catch (IOException ex) {
+            // do something.
+            ex.printStackTrace();
+        }
+
+        //jpa.png -> multipart 변환
+        MultipartFile mFile = new CommonsMultipartFile(fileItem);
+        return mFile;
+    }
+
     /**
      * 요청받은 형태의 시간으로
      * @param format
@@ -496,10 +519,10 @@ public class FileStorageService {
      * @return
      * @throws IOException
      */
-    private String getFileHash(MultipartFile file)  {
+    private String getFileHash(File file)  {
         String digestFileName = "";
         try{
-            digestFileName = DigestUtils.md5Hex(file.getInputStream());
+            digestFileName = DigestUtils.md5Hex(new FileInputStream(file));
         }catch (IOException ioe){
             throw new FileStorageException("file md5 Hash is failed");
         }
