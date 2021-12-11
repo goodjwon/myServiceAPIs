@@ -91,10 +91,15 @@ public class FileStorageService {
             String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
             File outImage = new File(savePath);
+
             System.out.println(i);
 
             try {
                 outImage= resizeImage(rootImage , outImage, i, 0, "jpg" );
+
+                List<String> filePermissionGroups = parentFile.getFilePermissionGroups().stream()
+                        .map(a -> a.getIdAccessCode())
+                        .collect(Collectors.toList());
 
                 MyFiles subFileCommon = MyFiles.builder()
                         .fileDownloadPath(fileDownloadUri)
@@ -104,10 +109,10 @@ public class FileStorageService {
                         .filePath(savePath)
                         .fileSize(outImage.length())
                         .fileStatus(FileStatus.Registered)
-                        .userFilePermissions(parentFile.getUserFilePermissions())
-                        .filePermissionGroups(parentFile.getFilePermissionGroups())
-                        .filePhyName(uuidFileName)
+                        .userFilePermissions(addDefaultPermission()) //에러남   새로 생성홰서 처리 필요. 상위 객체 참조 불가.
+                        .filePermissionGroups(addUserAccessCode(filePermissionGroups))   //에러남, 새로 생성해서 처리 필요 상위 객체 참조 불가.
                         .fileOwnerByUserCode(parentFile.getFileOwnerByUserCode())
+                        .filePhyName(uuidFileName)
                         .postLinkType("")
                         .postLinked(0L)
                         .build();
@@ -140,7 +145,7 @@ public class FileStorageService {
                     .filePath(savePath)
                     .fileSize(file.getSize())
                     .fileStatus(FileStatus.Registered)
-                    .userFilePermissions(addDefaultPermission(fileRequest).getUserFilePermissions())
+                    .userFilePermissions(addDefaultPermission())
                     .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                     .filePhyName(uuidFileName)
                     .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
@@ -274,17 +279,14 @@ public class FileStorageService {
 
     /**
      * 기본으로 올린사람의 권한은 보장한다.
-     * @param fileRequest
      * @return
      */
-    private UploadFileRequest addDefaultPermission(UploadFileRequest fileRequest) {
-        if(fileRequest.getUserFilePermissions().isEmpty()){
+    private List<String> addDefaultPermission() {
             List<String> filePermissions = new ArrayList<>();
             filePermissions.add(OWNER_WRITE.getPermission());
             filePermissions.add(OWNER_READ.getPermission());
-            fileRequest.addUserFilePermissions(filePermissions);
-        }
-        return fileRequest;
+
+        return filePermissions;
     }
 
 
