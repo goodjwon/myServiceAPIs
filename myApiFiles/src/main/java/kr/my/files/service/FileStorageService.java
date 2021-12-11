@@ -81,20 +81,22 @@ public class FileStorageService {
 
     }
 
+    /**
+     * 썸네일 파일 및 저장 기능
+     * @param parentFile
+     * @param file
+     * @param thumbnailSizeList
+     */
     public void saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
         File rootImage = new File(parentFile.getFilePath());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
 
         thumbnailSizeList.stream().forEach(i->{
-            log.info("########################################################");
             String uuidFileName = getThumbnailName(rootImage.getName(), i.toString());
             String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
             File outImage = new File(savePath);
 
-            System.out.println(i);
-
-            try {
                 outImage= resizeImage(rootImage , outImage, i, 0, "jpg" );
 
                 List<String> filePermissionGroups = parentFile.getFilePermissionGroups().stream()
@@ -119,14 +121,13 @@ public class FileStorageService {
 
                 myFilesRopository.save(subFileCommon);
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         });
     }
 
     /**
-     *
+     * 파일 업로드 및 정보 저장
+     * @param fileRequest
+     * @return
      */
     public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
         try {
@@ -166,8 +167,6 @@ public class FileStorageService {
         }
         return new FileMetadataResponse();
     }
-
-
 
     /**
      * 파일 유니크 명을통해 파일 정보를 요청한다.
@@ -239,7 +238,12 @@ public class FileStorageService {
 
     }
 
-
+    /**
+     * 파일 소유주 확인
+     * @param ownerDomainCode
+     * @param ownerAuthenticationCode
+     * @return
+     */
     private FileOwner ownerCheckSum(String ownerDomainCode, String ownerAuthenticationCode){
 
         FileOwner fileOwner = ownerInformationConfirmation(ownerDomainCode, ownerAuthenticationCode );
@@ -332,32 +336,35 @@ public class FileStorageService {
     /**
      * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
      */
-    private File resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) throws Exception {
-        BufferedImage originalImage = ImageIO.read(rootImage); //todo 세로 가로 구분 하지 못하는 것 보정 필요.
+    private File resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) {
+        try {
+            BufferedImage originalImage = ImageIO.read(rootImage);
+            if( originalImage.getWidth() > 5000){
+                throw new OverImagePixelException("3840 pixel over");
+            }
 
-        if( originalImage.getWidth() > 5000){
-            throw new OverImagePixelException("3840 pixel over");
+            if( originalImage.getHeight() > 5000){
+                throw new OverImagePixelException("3840 pixel over");
+            }
+
+            double widthRatio  = (double)targetWidth / (double)originalImage.getWidth();
+            int imageHeight = targetHeight > 0 ? targetHeight : (int)(originalImage.getHeight() * widthRatio);
+
+            log.info("originalImage.getType() >> "+String.valueOf(originalImage.getType()));
+            log.info("originalImage.getWidth() >> "+String.valueOf(originalImage.getWidth()));
+            log.info("originalImage.getHeight() >> "+ String.valueOf(originalImage.getHeight()));
+            log.info("widthRatio >> "+ widthRatio);
+            log.info("targetWidth >> "+ targetWidth + " imageHeight >> "+imageHeight);
+
+            Thumbnails.of(rootImage)
+                    .size(targetWidth, imageHeight)
+                    .outputFormat(imageFormat)
+                    .outputQuality(1)
+                    .toFile(outImage);
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        if( originalImage.getHeight() > 5000){
-            throw new OverImagePixelException("3840 pixel over");
-        }
-
-        double widthRatio  = (double)targetWidth / (double)originalImage.getWidth();
-        int imageHeight = targetHeight > 0 ? targetHeight : (int)(originalImage.getHeight() * widthRatio);
-
-        log.info("originalImage.getType() >> "+String.valueOf(originalImage.getType()));
-        log.info("originalImage.getWidth() >> "+String.valueOf(originalImage.getWidth()));
-        log.info("originalImage.getHeight() >> "+ String.valueOf(originalImage.getHeight()));
-        log.info("widthRatio >> "+ widthRatio);
-        log.info("targetWidth >> "+ targetWidth + " imageHeight >> "+imageHeight);
-
-        Thumbnails.of(rootImage)
-                .size(targetWidth, imageHeight)
-                .outputFormat(imageFormat)
-                .outputQuality(1)
-                .toFile(outImage);
-
         return outImage;
     }
 
