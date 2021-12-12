@@ -22,6 +22,8 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
     private String checkSum;
     private long size;
     private List<String> filePermissions;
+    private List<String> thumbnailImagePaths;
+
     private List<FilePermissionGroup> filePermissionGroups;
 
     @Builder
@@ -42,5 +44,9 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
     public void addFilePermission(List<String> filePermissions){
         this.filePermissions = filePermissions;
     }
+    public void addFileThumbnailImagePaths(List<String> thumbnailImagePaths){
+        this.thumbnailImagePaths = thumbnailImagePaths;
+    }
+
 
 }

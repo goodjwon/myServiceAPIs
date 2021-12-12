@@ -87,9 +87,10 @@ public class FileStorageService {
      * @param file
      * @param thumbnailSizeList
      */
-    public void saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
+    public List<String> saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
         File rootImage = new File(parentFile.getFilePath());
         String subPath = getSubPath("yyyy/MM/dd/HH/mm");
+        List<String> thumbnailImagePaths = new ArrayList<>();
 
         thumbnailSizeList.stream().forEach(i->{
             String uuidFileName = getThumbnailName(rootImage.getName(), i.toString());
@@ -111,7 +112,7 @@ public class FileStorageService {
                         .filePath(savePath)
                         .fileSize(outImage.length())
                         .fileStatus(FileStatus.Registered)
-                        .userFilePermissions(addDefaultPermission()) //에러남   새로 생성홰서 처리 필요. 상위 객체 참조 불가.
+                        .userFilePermissions(addDefaultPermission(parentFile.getUserFilePermissions())) //에러남   새로 생성홰서 처리 필요. 상위 객체 참조 불가.
                         .filePermissionGroups(addUserAccessCode(filePermissionGroups))   //에러남, 새로 생성해서 처리 필요 상위 객체 참조 불가.
                         .fileOwnerByUserCode(parentFile.getFileOwnerByUserCode())
                         .filePhyName(uuidFileName)
@@ -120,8 +121,10 @@ public class FileStorageService {
                         .build();
 
                 myFilesRopository.save(subFileCommon);
+                thumbnailImagePaths.add(fileDownloadUri);
 
         });
+        return thumbnailImagePaths;
     }
 
     /**
@@ -137,6 +140,7 @@ public class FileStorageService {
             String fileDownloadUri = getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
             String fileHash = getFileHash(multipartToFile(fileRequest.getFile()));
             MultipartFile file = fileRequest.getFile();
+            FileMetadataResponse fileMetadataResponse;
 
             MyFiles myFile = MyFiles.builder()
                     .fileDownloadPath(fileDownloadUri)
@@ -146,7 +150,7 @@ public class FileStorageService {
                     .filePath(savePath)
                     .fileSize(file.getSize())
                     .fileStatus(FileStatus.Registered)
-                    .userFilePermissions(addDefaultPermission())
+                    .userFilePermissions(addDefaultPermission(fileRequest.getUserFilePermissions()))
                     .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                     .filePhyName(uuidFileName)
                     .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
@@ -155,12 +159,16 @@ public class FileStorageService {
                     .build();
 
             myFilesRopository.save(myFile);
+            fileMetadataResponse = FileMetadataResponse.builder()
+                    .myFiles(myFile)
+                    .build();
 
             if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().stream().count() > 0) {
-                saveThumbnailImage(myFile, fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths());
+                fileMetadataResponse.addFileThumbnailImagePaths(
+                        saveThumbnailImage(myFile, fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths()));
             }
 
-            return FileMetadataResponse.builder().myFiles(myFile).build();
+            return fileMetadataResponse;
 
         }catch(IOException e){
             e.printStackTrace();
@@ -285,10 +293,16 @@ public class FileStorageService {
      * 기본으로 올린사람의 권한은 보장한다.
      * @return
      */
-    private List<String> addDefaultPermission() {
-            List<String> filePermissions = new ArrayList<>();
+    private List<String> addDefaultPermission(List<String> permissions) {
+        List<String> filePermissions = new ArrayList<>();
+        if (permissions.size() == 0){
             filePermissions.add(OWNER_WRITE.getPermission());
             filePermissions.add(OWNER_READ.getPermission());
+        } else {
+            permissions.forEach(permission->{
+                filePermissions.add(permission);
+            });
+        }
 
         return filePermissions;
     }
