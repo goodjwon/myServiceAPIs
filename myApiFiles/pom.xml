@@ -138,6 +138,12 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin> <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <jvmArguments> -Xms2048m -Xmx4096m </jvmArguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
