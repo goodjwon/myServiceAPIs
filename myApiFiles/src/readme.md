@@ -135,12 +135,29 @@ file.public-space-dir= ${user.home}/Download
 file.protect-space-dir= D${user.home}/Download
 ```
 
-#### 전문포멧
-
+### 전문포멧
+#### 파일정보요청
+```json
+{"filePhyName":"95b02285-a79a-4b7e-944d-c53d73b8907d.txt","ownerDomainCode":"19103e6354655886cb2f46880a4ae116","ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531","fileCheckSum":"65a8e27d8879283831b664bd8b7f0ad4"}
+```
+#### 파일정보 응답
+```json
+{"ownerDomainCode":"19103e6354655886cb2f46880a4ae116","ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531","fileName":"95b02285-a79a-4b7e-944d-c53d73b8907d.txt","fileDownloadUri":"/file-download/95b02285-a79a-4b7e-944d-c53d73b8907d.txt","fileType":"text/plain","originFileName":"hello.txt","checkSum":"65a8e27d8879283831b664bd8b7f0ad4","size":13,"filePermissions":["owner:write","owner:read"],"thumbnailImagePaths":null,"filePermissionGroups":[{"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},{"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},{"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]}
+```
+#### 파일 다운로드 요청
+```json
+    {
+       "filePhyName":"2d60c7b2-7b42-4745-9829-817287376c36.txt",
+       "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
+       "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
+       "fileCheckSum":"65a8e27d8879283831b664bd8b7f0ad4"
+    }
+```
+#### 파일 다운로드 응답
 ``` json
     {
         파일명 :"e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        다운로드 경로 : "http://localhost:8080/downloadFile/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
+        다운로드 경로 (도메인 이하 경로만 전달, 도메인은 프로그램 처리) : "/file-download/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
         파일 타입 :"text/plain",
         원본파일명 : "hello.txt",
         해쉬값:"65a8e27d8879283831b664bd8b7f0ad4",
@@ -150,20 +167,33 @@ file.protect-space-dir= D${user.home}/Download
         작성일: 
         소유자:  
     }
+
     {
-        "fileName":"e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        "fileDownloadUri":"http://localhost:8080/downloadFile/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        "fileType":"text/plain",
-        "originFileName":"hello.txt",
-        "hashName":"65a8e27d8879283831b664bd8b7f0ad4",
-        "size":13,
-        "filePermissions":["OWNER_WRITE","OWNER_READ"],
-        "filePermissionGroups":[
-            {"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},
-            {"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},
-            {"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]
-     }
-     
+       "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
+       "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
+       "fileName":"95b02285-a79a-4b7e-944d-c53d73b8907d.txt",
+       "fileDownloadUri":"/file-download/95b02285-a79a-4b7e-944d-c53d73b8907d.txt",
+       "fileType":"text/plain",
+       "originFileName":"hello.txt",
+       "checkSum":"65a8e27d8879283831b664bd8b7f0ad4",
+       "size":13,
+       "filePermissions":[
+          "owner:write",
+          "owner:read"
+       ],
+       "thumbnailImagePaths":null,
+       "filePermissionGroups":[
+          {
+             "idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"
+          },
+          {
+             "idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"
+          },
+          {
+             "idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"
+          }
+       ]
+    }
      fileDownloadUri : 파일 업로드시 서비스되고 있는 도메인에 대해 정보 노출 (대표도메인으로 셋팅 할 수 있게 함.)
 ```
 
@@ -188,18 +218,13 @@ file.protect-space-dir= D${user.home}/Download
 
 - 썸네일 응답
 ``` json
-   {
+{
    "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
    "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
-   "fileName":"58262f09-8209-400d-8c67-c27d4f7c82a5.jpg",
-   "fileDownloadUri":"/public-file-download/58262f09-8209-400d-8c67-c27d4f7c82a5.jpg",
+   "fileName":"11dea77c-ce10-494e-845f-ff58793d87df.jpg",
+   "fileDownloadUri":"/public-file-download/11dea77c-ce10-494e-845f-ff58793d87df.jpg",
    "fileType":"image/jpeg",
    "originFileName":"IMG_3421.jpg",
-   "thumbnails":[
-        "200":"/public-file-download/58262f09-8209-400d-8c67-c27d4f7c82a5_200.jpg",
-        "400":"/public-file-download/58262f09-8209-400d-8c67-c27d4f7c82a5_400.jpg",
-        "500":"/public-file-download/58262f09-8209-400d-8c67-c27d4f7c82a5_500.jpg"
-   ],
    "checkSum":"25285cef31548d48cf98a8dba896eab0",
    "size":2007265,
    "filePermissions":[
@@ -207,10 +232,21 @@ file.protect-space-dir= D${user.home}/Download
       "owner:read",
       "public:read"
    ],
+   "thumbnailImagePaths":[
+      "/public-file-download/11dea77c-ce10-494e-845f-ff58793d87df_200.jpg",
+      "/public-file-download/11dea77c-ce10-494e-845f-ff58793d87df_400.jpg",
+      "/public-file-download/11dea77c-ce10-494e-845f-ff58793d87df_500.jpg"
+   ],
    "filePermissionGroups":[
-      {"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},
-      {"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},
-      {"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}
+      {
+         "idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"
+      },
+      {
+         "idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"
+      },
+      {
+         "idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"
+      }
    ]
 }
 ```

@@ -164,6 +164,7 @@ public class FileControllerTest {
                 .andExpect(jsonPath("originFileName").value(file.getOriginalFilename()))
                 .andExpect(jsonPath("fileName").exists())
                 .andExpect(jsonPath("fileDownloadUri").exists())
+                .andExpect(jsonPath("thumbnailImagePaths").exists())
                 .andExpect(jsonPath("size").exists())
         ;
     }
