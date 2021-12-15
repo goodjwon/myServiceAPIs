@@ -92,15 +92,13 @@ public class FileStorageService {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
-            String fileDownloadUri = getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
-            String fileHash = getFileHash(multipartToFile(fileRequest.getFile()));
             MultipartFile file = fileRequest.getFile();
             FileMetadataResponse fileMetadataResponse;
 
             MyFiles myFile = MyFiles.builder()
-                    .fileDownloadPath(fileDownloadUri)
+                    .fileDownloadPath(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
                     .fileContentType(file.getContentType())
-                    .fileHashCode(fileHash)
+                    .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
                     .fileOrgName(file.getOriginalFilename())
                     .filePath(savePath)
                     .fileSize(file.getSize())
