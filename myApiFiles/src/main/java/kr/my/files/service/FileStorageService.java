@@ -81,51 +81,6 @@ public class FileStorageService {
 
     }
 
-    /**
-     * 썸네일 파일 및 저장 기능
-     * @param parentFile
-     * @param file
-     * @param thumbnailSizeList
-     */
-    public List<String> saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailSizeList){
-        File rootImage = new File(parentFile.getFilePath());
-        String subPath = getSubPath("yyyy/MM/dd/HH/mm");
-        List<String> thumbnailImagePaths = new ArrayList<>();
-
-        thumbnailSizeList.stream().forEach(i->{
-            String uuidFileName = getThumbnailName(rootImage.getName(), i.toString());
-            String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
-            String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
-            File outImage = new File(savePath);
-
-                outImage= resizeImage(rootImage , outImage, i, 0, "jpg" );
-
-                List<String> filePermissionGroups = parentFile.getFilePermissionGroups().stream()
-                        .map(a -> a.getIdAccessCode())
-                        .collect(Collectors.toList());
-
-                MyFiles subFileCommon = MyFiles.builder()
-                        .fileDownloadPath(fileDownloadUri)
-                        .fileContentType(parentFile.getFileContentType())
-                        .fileHashCode(getFileHash(outImage))
-                        .fileOrgName(parentFile.getFilePhyName())
-                        .filePath(savePath)
-                        .fileSize(outImage.length())
-                        .fileStatus(FileStatus.Registered)
-                        .userFilePermissions(addDefaultPermission(parentFile.getUserFilePermissions())) //에러남   새로 생성홰서 처리 필요. 상위 객체 참조 불가.
-                        .filePermissionGroups(addUserAccessCode(filePermissionGroups))   //에러남, 새로 생성해서 처리 필요 상위 객체 참조 불가.
-                        .fileOwnerByUserCode(parentFile.getFileOwnerByUserCode())
-                        .filePhyName(uuidFileName)
-                        .postLinkType("")
-                        .postLinked(0L)
-                        .build();
-
-                myFilesRopository.save(subFileCommon);
-                thumbnailImagePaths.add(fileDownloadUri);
-
-        });
-        return thumbnailImagePaths;
-    }
 
     /**
      * 파일 업로드 및 정보 저장
@@ -174,6 +129,53 @@ public class FileStorageService {
             e.printStackTrace();
         }
         return new FileMetadataResponse();
+    }
+
+    /**
+     * 썸네일 파일 및 저장 기능
+     * @param parentFile
+     * @param file
+     * @param thumbnailWidths
+     */
+
+    private List<String> saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailWidths){
+        File rootImage = new File(parentFile.getFilePath());
+        java.lang.String subPath = getSubPath("yyyy/MM/dd/HH/mm");
+        List<java.lang.String> thumbnailImagePaths = new ArrayList<>();
+
+        thumbnailWidths.stream().forEach(thumbnailWidth->{
+            java.lang.String uuidFileName = getThumbnailName(rootImage.getName(), thumbnailWidth.toString());
+            java.lang.String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
+            java.lang.String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
+            File outImage = new File(savePath);
+
+            outImage= resizeImage(rootImage , outImage, thumbnailWidth, 0, "jpg" );
+
+            List<java.lang.String> filePermissionGroups = parentFile.getFilePermissionGroups().stream()
+                    .map(a -> a.getIdAccessCode())
+                    .collect(Collectors.toList());
+
+            MyFiles subFileCommon = MyFiles.builder()
+                    .fileDownloadPath(fileDownloadUri)
+                    .fileContentType(parentFile.getFileContentType())
+                    .fileHashCode(getFileHash(outImage))
+                    .fileOrgName(parentFile.getFilePhyName())
+                    .filePath(savePath)
+                    .fileSize(outImage.length())
+                    .fileStatus(FileStatus.Registered)
+                    .userFilePermissions(addDefaultPermission(parentFile.getUserFilePermissions())) //에러남   새로 생성홰서 처리 필요. 상위 객체 참조 불가.
+                    .filePermissionGroups(addUserAccessCode(filePermissionGroups))   //에러남, 새로 생성해서 처리 필요 상위 객체 참조 불가.
+                    .fileOwnerByUserCode(parentFile.getFileOwnerByUserCode())
+                    .filePhyName(uuidFileName)
+                    .postLinkType("")
+                    .postLinked(0L)
+                    .build();
+
+            myFilesRopository.save(subFileCommon);
+            thumbnailImagePaths.add(fileDownloadUri);
+
+        });
+        return thumbnailImagePaths;
     }
 
     /**
