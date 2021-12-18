@@ -10,6 +10,7 @@ import com.drew.metadata.exif.ExifIFD0Directory;
 import kr.my.files.dao.FileOwnerRepository;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
+import kr.my.files.dto.FileSaveResult;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.entity.FileOwner;
 import kr.my.files.entity.FilePermissionGroup;
@@ -94,32 +95,41 @@ public class FileStorageService {
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
             MultipartFile file = fileRequest.getFile();
             FileMetadataResponse fileMetadataResponse;
+            getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
+            file.getContentType();
+            getFileHash(multipartToFile(fileRequest.getFile()));
+            file.getOriginalFilename();
+            file.getSize();
+            addDefaultPermission(fileRequest.getUserFilePermissions());
+            addUserAccessCode(fileRequest.getIdAccessCodes());
+            ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
 
-            MyFiles myFile = MyFiles.builder()
-                    .fileDownloadPath(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
-                    .fileContentType(file.getContentType())
-                    .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
-                    .fileOrgName(file.getOriginalFilename())
-                    .filePath(savePath)
-                    .fileSize(file.getSize())
-                    .fileStatus(FileStatus.Registered)
-                    .userFilePermissions(addDefaultPermission(fileRequest.getUserFilePermissions()))
-                    .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
-                    .filePhyName(uuidFileName)
-                    .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
-                    .postLinkType("")
-                    .postLinked(0L)
+            FileSaveResult.builder().fileSavePath()
+                    .fileContentType()
+                    .fileHashCode()
+                    .fileOrgName()
+                    .fileSize()
+                    .filePhyName()
+                    .fileDownloadUri()
+                    .fileSize()
+                    .filePhyName()
                     .build();
 
-            myFilesRopository.save(myFile);
+
+
+            List<String> thumbnailImage = new ArrayList<>();
+            if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().stream().count() > 0) {
+
+                thumbnailImage = saveThumbnailImage(fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths(), subPath);
+            }
+
+
             fileMetadataResponse = FileMetadataResponse.builder()
                     .myFiles(myFile)
                     .build();
 
-            if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().stream().count() > 0) {
-                fileMetadataResponse.addFileThumbnailImagePaths(
-                        saveThumbnailImage(myFile, fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths()));
-            }
+            fileMetadataResponse.addFileThumbnailImagePaths(thumbnailImage);
+
 
             return fileMetadataResponse;
 
@@ -129,6 +139,27 @@ public class FileStorageService {
         return new FileMetadataResponse();
     }
 
+    private MyFiles saveFileInfo(FileSaveResult fileSaveResult){
+        MyFiles myFile = MyFiles.builder()
+                .fileDownloadPath()
+                .fileContentType()
+                .fileHashCode()
+                .fileOrgName()
+                .filePath()
+                .fileSize()
+                .fileStatus(FileStatus.Registered)
+                .userFilePermissions()
+                .filePermissionGroups()
+                .filePhyName()
+                .fileOwnerByUserCode()
+                .postLinkType("")
+                .postLinked(0L)
+                .build();
+
+        return myFilesRopository.save(myFile);
+
+    }
+
     /**
      * 썸네일 파일 및 저장 기능
      * @param parentFile
@@ -136,40 +167,22 @@ public class FileStorageService {
      * @param thumbnailWidths
      */
 
-    private List<String> saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailWidths){
-        File rootImage = new File(parentFile.getFilePath());
-        java.lang.String subPath = getSubPath("yyyy/MM/dd/HH/mm");
+    private List<String> saveThumbnailImage(InputStream rootImage,
+                                            String rootImageName,
+                                            List<Integer> thumbnailWidths,
+                                            List<String> userFilePermissions,
+                                            String subPath){
         List<java.lang.String> thumbnailImagePaths = new ArrayList<>();
 
         thumbnailWidths.stream().forEach(thumbnailWidth->{
-            java.lang.String uuidFileName = getThumbnailName(rootImage.getName(), thumbnailWidth.toString());
-            java.lang.String savePath = storeFile(file, parentFile.getUserFilePermissions(), uuidFileName, subPath);
-            java.lang.String fileDownloadUri = getFileDownloadUri(parentFile.getUserFilePermissions(), uuidFileName);
+            String uuidFileName = getThumbnailName(rootImageName, thumbnailWidth.toString());
+            String savePath = storeFile(rootImage, userFilePermissions, uuidFileName, subPath);
+            String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
             File outImage = new File(savePath);
 
             outImage= resizeImage(rootImage , outImage, thumbnailWidth, 0, "jpg" );
 
-            List<java.lang.String> filePermissionGroups = parentFile.getFilePermissionGroups().stream()
-                    .map(a -> a.getIdAccessCode())
-                    .collect(Collectors.toList());
 
-            MyFiles subFileCommon = MyFiles.builder()
-                    .fileDownloadPath(fileDownloadUri)
-                    .fileContentType(parentFile.getFileContentType())
-                    .fileHashCode(getFileHash(outImage))
-                    .fileOrgName(parentFile.getFilePhyName())
-                    .filePath(savePath)
-                    .fileSize(outImage.length())
-                    .fileStatus(FileStatus.Registered)
-                    .userFilePermissions(addDefaultPermission(parentFile.getUserFilePermissions())) //에러남   새로 생성홰서 처리 필요. 상위 객체 참조 불가.
-                    .filePermissionGroups(addUserAccessCode(filePermissionGroups))   //에러남, 새로 생성해서 처리 필요 상위 객체 참조 불가.
-                    .fileOwnerByUserCode(parentFile.getFileOwnerByUserCode())
-                    .filePhyName(uuidFileName)
-                    .postLinkType("")
-                    .postLinked(0L)
-                    .build();
-
-            myFilesRopository.save(subFileCommon);
             thumbnailImagePaths.add(fileDownloadUri);
 
         });
