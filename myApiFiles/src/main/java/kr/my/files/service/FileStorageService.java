@@ -10,6 +10,7 @@ import com.drew.metadata.exif.ExifIFD0Directory;
 import kr.my.files.dao.FileOwnerRepository;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
+import kr.my.files.dto.FileSaveResult;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.entity.FileOwner;
 import kr.my.files.entity.FilePermissionGroup;
@@ -118,7 +119,7 @@ public class FileStorageService {
 
             if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().stream().count() > 0) {
                 fileMetadataResponse.addFileThumbnailImagePaths(
-                        saveThumbnailImage(myFile, fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths()));
+                        saveThumbnailImage(myFile, fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths(), subPath));
             }
 
             return fileMetadataResponse;
@@ -136,9 +137,8 @@ public class FileStorageService {
      * @param thumbnailWidths
      */
 
-    private List<String> saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailWidths){
+    private List<String> saveThumbnailImage(MyFiles parentFile, InputStream file, List<Integer> thumbnailWidths, String subPath){
         File rootImage = new File(parentFile.getFilePath());
-        java.lang.String subPath = getSubPath("yyyy/MM/dd/HH/mm");
         List<java.lang.String> thumbnailImagePaths = new ArrayList<>();
 
         thumbnailWidths.stream().forEach(thumbnailWidth->{
@@ -307,6 +307,36 @@ public class FileStorageService {
         return filePermissions;
     }
 
+
+    private List<FileSaveResult> storeFiles(UploadFileRequest request) throws IOException {
+
+        String rootPath =
+                isPublicPermission(request.getUserFilePermissions())?
+                        fileStorageProperties.getPublicSpaceDir():
+                        fileStorageProperties.getUploadDir();
+
+
+
+        this.fileStorageLocation = Paths.get(rootPath)
+                .toAbsolutePath()
+                .normalize();
+
+        Path targetLocation = this.fileStorageLocation.resolve(getSubPath("yyyy/MM/dd/HH/mm")); //경로 만들기.
+
+        //경로가 없을 경우 만든다.
+        if(!Files.exists(targetLocation)){
+            Files.createDirectories(targetLocation);
+        }
+
+        Path savePath = targetLocation.resolve(getUUIDFileName(request.getFile().getOriginalFilename()));
+
+        //파일 저장하기
+        Files.copy(request.getFile().getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
+
+        return savePath.toString();
+
+        return null;
+    }
 
     /**
      * 업로드된 파일을 지정된 경로에 저장한다.
