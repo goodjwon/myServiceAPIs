@@ -93,6 +93,9 @@ public class FileStorageService {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
+            List<String> localSavePaths = new ArrayList<>();
+            List<String> downloadPaths = new ArrayList<>();
+
             MultipartFile file = fileRequest.getFile();
             FileMetadataResponse fileMetadataResponse;
             getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
@@ -103,32 +106,36 @@ public class FileStorageService {
             addDefaultPermission(fileRequest.getUserFilePermissions());
             addUserAccessCode(fileRequest.getIdAccessCodes());
             ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
-
-            FileSaveResult.builder().fileSavePath()
-                    .fileContentType()
-                    .fileHashCode()
-                    .fileOrgName()
-                    .fileSize()
-                    .filePhyName()
-                    .fileDownloadUri()
-                    .fileSize()
-                    .filePhyName()
-                    .build();
+            localSavePaths.add(savePath);
 
 
+            localSavePaths.add(saveThumbnailImage(savePath, uuidFileName, fileRequest.getThumbnailWiths(), subPath));
+            localSavePaths.forEach(path->{
+                myFilesRopository.save(MyFiles.builder()
+                        .fileDownloadPath(fileSaveResult.getFileDownloadUri())
+                        .fileContentType(fileSaveResult.getFileContentType())
+                        .fileHashCode(fileSaveResult.getFileHashCode())
+                        .fileOrgName(fileSaveResult.getFileOrgName())
+                        .filePath(fileSaveResult.getFileSavePath())
+                        .fileSize()
+                        .fileStatus(FileStatus.Registered)
+                        .userFilePermissions()
+                        .filePermissionGroups()
+                        .filePhyName()
+                        .fileOwnerByUserCode()
+                        .postLinkType("")
+                        .postLinked(0L)
+                        .build());
+            });
 
-            List<String> thumbnailImage = new ArrayList<>();
-            if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().stream().count() > 0) {
 
-                thumbnailImage = saveThumbnailImage(fileRequest.getFile().getInputStream(), fileRequest.getThumbnailWiths(), subPath);
-            }
 
 
             fileMetadataResponse = FileMetadataResponse.builder()
                     .myFiles(myFile)
                     .build();
 
-            fileMetadataResponse.addFileThumbnailImagePaths(thumbnailImage);
+            fileMetadataResponse.addFileThumbnailImagePaths(downloadPaths);
 
 
             return fileMetadataResponse;
@@ -141,11 +148,11 @@ public class FileStorageService {
 
     private MyFiles saveFileInfo(FileSaveResult fileSaveResult){
         MyFiles myFile = MyFiles.builder()
-                .fileDownloadPath()
-                .fileContentType()
-                .fileHashCode()
-                .fileOrgName()
-                .filePath()
+                .fileDownloadPath(fileSaveResult.getFileDownloadUri())
+                .fileContentType(fileSaveResult.getFileContentType())
+                .fileHashCode(fileSaveResult.getFileHashCode())
+                .fileOrgName(fileSaveResult.getFileOrgName())
+                .filePath(fileSaveResult.getFileSavePath())
                 .fileSize()
                 .fileStatus(FileStatus.Registered)
                 .userFilePermissions()
@@ -156,23 +163,23 @@ public class FileStorageService {
                 .postLinked(0L)
                 .build();
 
-        return myFilesRopository.save(myFile);
+        return
 
     }
 
     /**
      * 썸네일 파일 및 저장 기능
-     * @param parentFile
-     * @param file
      * @param thumbnailWidths
      */
 
-    private List<String> saveThumbnailImage(InputStream rootImage,
+    private List<String> saveThumbnailImage(String filePath,
                                             String rootImageName,
                                             List<Integer> thumbnailWidths,
                                             List<String> userFilePermissions,
-                                            String subPath){
+                                            String subPath) throws IOException {
         List<java.lang.String> thumbnailImagePaths = new ArrayList<>();
+        Path source = Paths.get(filePath);
+        InputStream rootImage = Files.newInputStream(source);
 
         thumbnailWidths.stream().forEach(thumbnailWidth->{
             String uuidFileName = getThumbnailName(rootImageName, thumbnailWidth.toString());
@@ -180,7 +187,7 @@ public class FileStorageService {
             String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
             File outImage = new File(savePath);
 
-            outImage= resizeImage(rootImage , outImage, thumbnailWidth, 0, "jpg" );
+            outImage= resizeImage(filePath , outImage, thumbnailWidth, 0, "jpg" );
 
 
             thumbnailImagePaths.add(fileDownloadUri);
@@ -363,9 +370,9 @@ public class FileStorageService {
     /**
      * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
      */
-    private File resizeImage(File rootImage, File outImage, int targetWidth, int targetHeight, String imageFormat) {
+    private File resizeImage(String rootImagePath, File outImage, int targetWidth, int targetHeight, String imageFormat) {
         try {
-            BufferedImage originalImage = ImageIO.read(rootImage);
+            BufferedImage originalImage = ImageIO.read(new File(rootImagePath));
             if( originalImage.getWidth() > 5000){
                 throw new OverImagePixelException("3840 pixel over");
             }
@@ -383,7 +390,7 @@ public class FileStorageService {
             log.info("widthRatio >> "+ widthRatio);
             log.info("targetWidth >> "+ targetWidth + " imageHeight >> "+imageHeight);
 
-            Thumbnails.of(rootImage)
+            Thumbnails.of(rootImagePath)
                     .size(targetWidth, imageHeight)
                     .outputFormat(imageFormat)
                     .outputQuality(1)

@@ -1,13 +1,11 @@
 package kr.my.files.dto;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
+@Data
 public class FileSaveResult {
     private String fileDownloadUri;
     private String fileContentType;
