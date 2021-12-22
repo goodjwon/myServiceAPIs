@@ -93,36 +93,41 @@ public class FileStorageService {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
-            List<String> localSavePaths = new ArrayList<>();
-            List<String> downloadPaths = new ArrayList<>();
+            List<FileSaveResult> fileSaveResults = new ArrayList<>();
 
             MultipartFile file = fileRequest.getFile();
             FileMetadataResponse fileMetadataResponse;
-            getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName);
-            file.getContentType();
-            getFileHash(multipartToFile(fileRequest.getFile()));
-            file.getOriginalFilename();
-            file.getSize();
-            addDefaultPermission(fileRequest.getUserFilePermissions());
-            addUserAccessCode(fileRequest.getIdAccessCodes());
-            ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
-            localSavePaths.add(savePath);
 
+            fileSaveResults.add(FileSaveResult.builder()
+                    .fileSavePath(savePath)
+                    .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
+                    .filePhyName(file.getOriginalFilename())
+                    .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
+                    .fileContentType(file.getContentType())
+                    .fileOrgName(file.getOriginalFilename())
+                    .fileSize(file.getSize())
+                    .build());
+            
+            saveThumbnailImage(savePath, uuidFileName,
+                    fileRequest.getThumbnailWiths(),
+                    fileRequest.getUserFilePermissions(),
+                    subPath).forEach(path->{
+                fileSaveResults.add(path);
+            });
 
-            localSavePaths.add(saveThumbnailImage(savePath, uuidFileName, fileRequest.getThumbnailWiths(), subPath));
-            localSavePaths.forEach(path->{
+            fileSaveResults.forEach(fileSaveResult->{
                 myFilesRopository.save(MyFiles.builder()
                         .fileDownloadPath(fileSaveResult.getFileDownloadUri())
                         .fileContentType(fileSaveResult.getFileContentType())
                         .fileHashCode(fileSaveResult.getFileHashCode())
                         .fileOrgName(fileSaveResult.getFileOrgName())
                         .filePath(fileSaveResult.getFileSavePath())
-                        .fileSize()
+                        .fileSize(fileSaveResult.getFileSize())
+                        .filePhyName(fileSaveResult.getFilePhyName())
                         .fileStatus(FileStatus.Registered)
-                        .userFilePermissions()
-                        .filePermissionGroups()
-                        .filePhyName()
-                        .fileOwnerByUserCode()
+                        .userFilePermissions(addDefaultPermission(fileRequest.getUserFilePermissions()))
+                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
+                        .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
                         .postLinkType("")
                         .postLinked(0L)
                         .build());
@@ -132,10 +137,10 @@ public class FileStorageService {
 
 
             fileMetadataResponse = FileMetadataResponse.builder()
-                    .myFiles(myFile)
+                    .myFiles(null)
                     .build();
 
-            fileMetadataResponse.addFileThumbnailImagePaths(downloadPaths);
+            fileMetadataResponse.addFileThumbnailImagePaths(null);
 
 
             return fileMetadataResponse;
@@ -146,38 +151,16 @@ public class FileStorageService {
         return new FileMetadataResponse();
     }
 
-    private MyFiles saveFileInfo(FileSaveResult fileSaveResult){
-        MyFiles myFile = MyFiles.builder()
-                .fileDownloadPath(fileSaveResult.getFileDownloadUri())
-                .fileContentType(fileSaveResult.getFileContentType())
-                .fileHashCode(fileSaveResult.getFileHashCode())
-                .fileOrgName(fileSaveResult.getFileOrgName())
-                .filePath(fileSaveResult.getFileSavePath())
-                .fileSize()
-                .fileStatus(FileStatus.Registered)
-                .userFilePermissions()
-                .filePermissionGroups()
-                .filePhyName()
-                .fileOwnerByUserCode()
-                .postLinkType("")
-                .postLinked(0L)
-                .build();
-
-        return
-
-    }
-
     /**
      * 썸네일 파일 및 저장 기능
      * @param thumbnailWidths
      */
-
-    private List<String> saveThumbnailImage(String filePath,
+    private List<FileSaveResult> saveThumbnailImage(String filePath,
                                             String rootImageName,
                                             List<Integer> thumbnailWidths,
                                             List<String> userFilePermissions,
                                             String subPath) throws IOException {
-        List<java.lang.String> thumbnailImagePaths = new ArrayList<>();
+        List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();
         Path source = Paths.get(filePath);
         InputStream rootImage = Files.newInputStream(source);
 
@@ -189,8 +172,14 @@ public class FileStorageService {
 
             outImage= resizeImage(filePath , outImage, thumbnailWidth, 0, "jpg" );
 
-
-            thumbnailImagePaths.add(fileDownloadUri);
+            thumbnailImagePaths.add(FileSaveResult.builder()
+                    .fileSavePath(savePath)
+                    .fileDownloadUri(fileDownloadUri)
+                    .filePhyName(outImage.getName())
+                    .fileHashCode(getFileHash(outImage))
+                    .fileOrgName(rootImageName)
+                    .fileSize(outImage.length())
+                    .build());
 
         });
         return thumbnailImagePaths;
