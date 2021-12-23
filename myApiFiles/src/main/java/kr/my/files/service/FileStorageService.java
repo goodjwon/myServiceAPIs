@@ -99,7 +99,7 @@ public class FileStorageService {
             fileSaveResults.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
                     .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
-                    .filePhyName(file.getOriginalFilename())
+                    .filePhyName(uuidFileName)
                     .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
                     .fileContentType(file.getContentType())
                     .fileOrgName(file.getOriginalFilename())
@@ -118,21 +118,21 @@ public class FileStorageService {
             List<FileMetadataResponse> result = fileSaveResults.stream()
                     .map(fileSaveResult-> MyFiles.builder()
                         .fileDownloadPath(fileSaveResult.getFileDownloadUri())
-                        .fileContentType(fileSaveResult.getFileContentType())
                         .fileHashCode(fileSaveResult.getFileHashCode())
                         .fileOrgName(fileSaveResult.getFileOrgName())
                         .filePath(fileSaveResult.getFileSavePath())
                         .fileSize(fileSaveResult.getFileSize())
                         .filePhyName(fileSaveResult.getFilePhyName())
                         .fileStatus(FileStatus.Registered)
+                        .fileContentType(file.getContentType())
                         .userFilePermissions(addDefaultPermission(fileRequest.getUserFilePermissions()))
                         .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                         .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
                         .postLinkType("")
                         .postLinked(0L)
                         .build())
-                    .map(myFiles -> myFilesRopository.save(myFiles))
-                    .map(myFiles -> FileMetadataResponse.builder().myFiles(myFiles).build())
+                    .map(myFile -> myFilesRopository.save(myFile))
+                    .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
                     .collect(Collectors.toList());
 
             return result.get(0);
@@ -162,7 +162,18 @@ public class FileStorageService {
             String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
             File outImage = new File(savePath);
 
-            outImage= resizeImage(filePath , outImage, thumbnailWidth, 0, "jpg" );
+            outImage= resizeImage(filePath , outImage, thumbnailWidth, 0,  getFileExt(rootImageName) );
+
+            /**
+             *                     .fileSavePath(savePath)
+             *                     .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
+             *                     .filePhyName(file.getOriginalFilename())
+             *                     .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
+             *                     .fileContentType(file.getContentType())
+             *                     .fileOrgName(file.getOriginalFilename())
+             *                     .fileSize(file.getSize())
+             */
+
 
             thumbnailImagePaths.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
@@ -562,6 +573,11 @@ public class FileStorageService {
     private String getFileMimeType(MultipartFile file) throws IOException {
         String mimeType = new Tika().detect(file.getInputStream());
         return mimeType;
+    }
+
+    private String getFileExt(String fileName){
+        return FilenameUtils.getExtension(
+                StringUtils.cleanPath(fileName));
     }
 
 }
