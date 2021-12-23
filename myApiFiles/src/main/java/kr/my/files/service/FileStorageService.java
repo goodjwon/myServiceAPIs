@@ -107,16 +107,18 @@ public class FileStorageService {
                     .fileOrgName(file.getOriginalFilename())
                     .fileSize(file.getSize())
                     .build());
-            
-            saveThumbnailImage(savePath, uuidFileName,
-                    fileRequest.getThumbnailWiths(),
-                    fileRequest.getUserFilePermissions(),
-                    subPath).forEach(path->{
-                fileSaveResults.add(path);
-            });
 
-            fileSaveResults.forEach(fileSaveResult->{
-                myFilesRopository.save(MyFiles.builder()
+            if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().size() > 0){
+                saveThumbnailImage(savePath, uuidFileName,
+                        fileRequest.getThumbnailWiths(),
+                        fileRequest.getUserFilePermissions(),
+                        subPath).forEach(fileSaveResult->{
+                    fileSaveResults.add(fileSaveResult);
+                });
+            }
+
+            List<FileMetadataResponse> result = fileSaveResults.stream()
+                    .map(fileSaveResult-> MyFiles.builder()
                         .fileDownloadPath(fileSaveResult.getFileDownloadUri())
                         .fileContentType(fileSaveResult.getFileContentType())
                         .fileHashCode(fileSaveResult.getFileHashCode())
@@ -130,20 +132,13 @@ public class FileStorageService {
                         .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
                         .postLinkType("")
                         .postLinked(0L)
-                        .build());
-            });
+                        .build())
+                    .map(myFiles -> myFilesRopository.save(myFiles))
+                    .map(myFiles -> FileMetadataResponse.builder().myFiles(myFiles).build())
+                    .collect(Collectors.toList());
 
 
-
-
-            fileMetadataResponse = FileMetadataResponse.builder()
-                    .myFiles(null)
-                    .build();
-
-            fileMetadataResponse.addFileThumbnailImagePaths(null);
-
-
-            return fileMetadataResponse;
+            return result.get(0);
 
         }catch(IOException e){
             e.printStackTrace();
