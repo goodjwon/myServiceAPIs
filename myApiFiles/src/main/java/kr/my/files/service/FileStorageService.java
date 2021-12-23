@@ -49,6 +49,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -82,18 +83,18 @@ public class FileStorageService {
 
     }
 
-
     /**
      * 파일 업로드 및 정보 저장
      * @param fileRequest
      * @return
      */
-    public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
+    public FileMetadataResponse saveFile(UploadFileRequest fileRequest)  {
         try {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
             List<FileSaveResult> fileSaveResults = new ArrayList<>();
+            List<String> list = new ArrayList<>();
             MultipartFile file = fileRequest.getFile();
 
             fileSaveResults.add(FileSaveResult.builder()
@@ -109,13 +110,15 @@ public class FileStorageService {
             if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().size() > 0){
                 saveThumbnailImage(savePath, uuidFileName,
                         fileRequest.getThumbnailWiths(),
-                        fileRequest.getUserFilePermissions(),
-                        subPath).forEach(fileSaveResult->{
-                    fileSaveResults.add(fileSaveResult);
-                });
+                        fileRequest.getUserFilePermissions(), subPath).stream()
+                        .forEach(fileSaveResult -> fileSaveResults.add(fileSaveResult));
+
+                fileSaveResults.stream()
+                        .map(fileSaveResult -> list.add(fileSaveResult.getFileDownloadUri()))
+                        .collect(Collectors.toList());
             }
 
-            List<FileMetadataResponse> result = fileSaveResults.stream()
+            Optional<FileMetadataResponse> result = fileSaveResults.stream()
                     .map(fileSaveResult-> MyFiles.builder()
                         .fileDownloadPath(fileSaveResult.getFileDownloadUri())
                         .fileHashCode(fileSaveResult.getFileHashCode())
@@ -133,9 +136,11 @@ public class FileStorageService {
                         .build())
                     .map(myFile -> myFilesRopository.save(myFile))
                     .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
-                    .collect(Collectors.toList());
+                    .findFirst();
+            FileMetadataResponse response = result.orElseThrow(()->new FileStorageException("file make failed"));
+            response.addFileThumbnailImagePaths(list);
 
-            return result.get(0);
+            return response;
 
         }catch(IOException e){
             e.printStackTrace();

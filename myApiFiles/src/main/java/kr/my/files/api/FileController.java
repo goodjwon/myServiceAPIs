@@ -41,6 +41,7 @@ public class FileController {
      * @param fileRequest
      * @return
      */
+    @ExceptionHandler(value = IOException.class)
     @PostMapping(value = "/upload-file-permission-json-file")
     public ResponseEntity<FileMetadataResponse> uploadFileAndPerMissionWithJsonFile(
             @RequestPart(value = "file") MultipartFile file,
