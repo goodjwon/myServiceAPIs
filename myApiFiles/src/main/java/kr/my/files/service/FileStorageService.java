@@ -94,9 +94,7 @@ public class FileStorageService {
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
             List<FileSaveResult> fileSaveResults = new ArrayList<>();
-
             MultipartFile file = fileRequest.getFile();
-            FileMetadataResponse fileMetadataResponse;
 
             fileSaveResults.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
@@ -136,7 +134,6 @@ public class FileStorageService {
                     .map(myFiles -> myFilesRopository.save(myFiles))
                     .map(myFiles -> FileMetadataResponse.builder().myFiles(myFiles).build())
                     .collect(Collectors.toList());
-
 
             return result.get(0);
 
