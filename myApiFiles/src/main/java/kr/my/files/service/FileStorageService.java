@@ -80,7 +80,6 @@ public class FileStorageService {
         this.myFilesRopository = myFilesRopository;
         this.fileOwnerRepository = fileOwnerRepository;
         this.fileStorageProperties = fileStorageProperties;
-
     }
 
     /**
@@ -107,6 +106,8 @@ public class FileStorageService {
                     .fileSize(file.getSize())
                     .build());
 
+
+            //todo 메서드 분리
             if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().size() > 0){
                 saveThumbnailImage(savePath, uuidFileName,
                         fileRequest.getThumbnailWiths(),
@@ -117,7 +118,7 @@ public class FileStorageService {
                         .map(fileSaveResult -> list.add(fileSaveResult.getFileDownloadUri()))
                         .collect(Collectors.toList());
             }
-
+            //todo 메서드 분리
             Optional<FileMetadataResponse> result = fileSaveResults.stream()
                     .map(fileSaveResult-> MyFiles.builder()
                         .fileDownloadPath(fileSaveResult.getFileDownloadUri())
@@ -127,8 +128,8 @@ public class FileStorageService {
                         .fileSize(fileSaveResult.getFileSize())
                         .filePhyName(fileSaveResult.getFilePhyName())
                         .fileStatus(FileStatus.Registered)
-                        .fileContentType(file.getContentType())
                         .userFilePermissions(addDefaultPermission(fileRequest.getUserFilePermissions()))
+                        .fileContentType(file.getContentType())
                         .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
                         .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
                         .postLinkType("")
@@ -169,26 +170,13 @@ public class FileStorageService {
 
             outImage= resizeImage(filePath , outImage, thumbnailWidth, 0,  getFileExt(rootImageName) );
 
-            /**
-             *                     .fileSavePath(savePath)
-             *                     .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
-             *                     .filePhyName(file.getOriginalFilename())
-             *                     .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
-             *                     .fileContentType(file.getContentType())
-             *                     .fileOrgName(file.getOriginalFilename())
-             *                     .fileSize(file.getSize())
-             */
-
-
             thumbnailImagePaths.add(FileSaveResult.builder()
-                    .fileSavePath(savePath)
-                    .fileDownloadUri(fileDownloadUri)
-                    .filePhyName(outImage.getName())
-                    .fileHashCode(getFileHash(outImage))
-                    .fileOrgName(rootImageName)
-                    .fileSize(outImage.length())
-                    .build());
-
+                .fileSavePath(savePath)
+                .fileDownloadUri(fileDownloadUri)
+                .filePhyName(outImage.getName())
+                .fileHashCode(getFileHash(outImage))
+                .fileOrgName(rootImageName)
+                .fileSize(outImage.length()).build());
         });
         return thumbnailImagePaths;
     }
@@ -250,13 +238,12 @@ public class FileStorageService {
                 fileInfoRequest.getFileCheckSum())
                     .orElseThrow(() -> new MyFileNotFoundException(fileInfoRequest.getFilePhyName()));
 
-
         FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileOwnerByUserCode().getOwnerSeq())
                     .orElseThrow(()-> new OwnerNotMeachedException(fileInfoRequest.getFilePhyName()));
 
         boolean a = fileOwner.getOwnerAuthenticationCheckSum().equals(fileInfoRequest.getOwnerAuthenticationCode());
         boolean b = fileOwner.getOwnerDomainCheckSum().equals(fileInfoRequest.getOwnerDomainCode());
-
+        //todo 교체 필요
         if(a && b) result = true;
 
         return result;
@@ -299,10 +286,9 @@ public class FileStorageService {
      */
     private List<FilePermissionGroup> addUserAccessCode(List<String> idAccessCode){
         return collectionToStream(idAccessCode)
-                .map(a ->
-                        FilePermissionGroup.builder()
-                                .idAccessCode(a)
-                                .build())
+                .map(a -> FilePermissionGroup.builder()
+                            .idAccessCode(a)
+                            .build())
                 .collect(Collectors.toList());
     }
 
@@ -311,7 +297,7 @@ public class FileStorageService {
      * @return
      */
     private List<String> addDefaultPermission(List<String> permissions) {
-        List<String> filePermissions = new ArrayList<>();
+        List<String> filePermissions = new ArrayList<>();   //todo 교체필요
         if (permissions.size() == 0){
             filePermissions.add(OWNER_WRITE.getPermission());
             filePermissions.add(OWNER_READ.getPermission());
@@ -320,7 +306,6 @@ public class FileStorageService {
                 filePermissions.add(permission);
             });
         }
-
         return filePermissions;
     }
 
@@ -335,7 +320,6 @@ public class FileStorageService {
                              String uuidFileName,
                              String subPath) {
         try {
-
             String rootPath =
                     isPublicPermission(userFilePermissions)?
                             fileStorageProperties.getPublicSpaceDir():

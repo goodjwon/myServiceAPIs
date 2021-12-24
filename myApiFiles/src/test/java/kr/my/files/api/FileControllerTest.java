@@ -57,7 +57,6 @@ public class FileControllerTest {
     @Autowired
     FileStorageService fileStorageService;
 
-
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
     void uploadShouldReturnMetadataNameWithJsonFile() throws Exception {
