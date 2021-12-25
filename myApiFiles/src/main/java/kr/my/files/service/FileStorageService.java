@@ -93,60 +93,89 @@ public class FileStorageService {
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
             List<FileSaveResult> fileSaveResults = new ArrayList<>();
-            List<String> list = new ArrayList<>();
+            List<String> thumbnailImages = new ArrayList<>();
+
             MultipartFile file = fileRequest.getFile();
+            String fileContentType = file.getContentType();
 
             fileSaveResults.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
                     .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
                     .filePhyName(uuidFileName)
                     .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
-                    .fileContentType(file.getContentType())
+                    .fileContentType(fileContentType)
                     .fileOrgName(file.getOriginalFilename())
                     .fileSize(file.getSize())
                     .build());
 
+            List<String> userFilePermissions =  addDefaultPermission(fileRequest.getUserFilePermissions());
+            List<FilePermissionGroup> idAccessCodes =  addUserAccessCode(fileRequest.getIdAccessCodes());
+            FileOwner fileOwner = ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
 
-            //todo 메서드 분리
-            if(fileRequest.getThumbnailWiths() !=null && fileRequest.getThumbnailWiths().size() > 0){
-                saveThumbnailImage(savePath, uuidFileName,
+            if(fileRequest.getThumbnailWiths() !=null
+                    && fileRequest.getThumbnailWiths().size() > 0){
+                thumbnailImages(
                         fileRequest.getThumbnailWiths(),
-                        fileRequest.getUserFilePermissions(), subPath).stream()
-                        .forEach(fileSaveResult -> fileSaveResults.add(fileSaveResult));
-
-                fileSaveResults.stream()
-                        .map(fileSaveResult -> list.add(fileSaveResult.getFileDownloadUri()))
-                        .collect(Collectors.toList());
+                        fileRequest.getUserFilePermissions(),
+                        uuidFileName,
+                        subPath,
+                        savePath);
             }
-            //todo 메서드 분리
-            Optional<FileMetadataResponse> result = fileSaveResults.stream()
-                    .map(fileSaveResult-> MyFiles.builder()
-                        .fileDownloadPath(fileSaveResult.getFileDownloadUri())
-                        .fileHashCode(fileSaveResult.getFileHashCode())
-                        .fileOrgName(fileSaveResult.getFileOrgName())
-                        .filePath(fileSaveResult.getFileSavePath())
-                        .fileSize(fileSaveResult.getFileSize())
-                        .filePhyName(fileSaveResult.getFilePhyName())
-                        .fileStatus(FileStatus.Registered)
-                        .userFilePermissions(addDefaultPermission(fileRequest.getUserFilePermissions()))
-                        .fileContentType(file.getContentType())
-                        .filePermissionGroups(addUserAccessCode(fileRequest.getIdAccessCodes()))
-                        .fileOwnerByUserCode(ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()))
-                        .postLinkType("")
-                        .postLinked(0L)
-                        .build())
-                    .map(myFile -> myFilesRopository.save(myFile))
-                    .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
-                    .findFirst();
-            FileMetadataResponse response = result.orElseThrow(()->new FileStorageException("file make failed"));
-            response.addFileThumbnailImagePaths(list);
 
-            return response;
+            return getFileMetadataResponse(fileSaveResults, userFilePermissions,  idAccessCodes, fileContentType, fileOwner);
 
         }catch(IOException e){
             e.printStackTrace();
         }
         return new FileMetadataResponse();
+    }
+
+    private List<String> getThumbnailImageDownloadPath(List<FileSaveResult> fileSaveResults) {
+        return fileSaveResults.stream()
+                .map(fileSaveResult -> fileSaveResult.getFileDownloadUri())
+                .collect(Collectors.toList());
+    }
+
+
+    private List<FileSaveResult> thumbnailImages (
+            List<Integer> thumbnailWiths,
+            List<String> filePermissions,
+            String uuidFileName, String subPath, String savePath) throws IOException {
+
+        return saveThumbnailImage(savePath, uuidFileName,
+                thumbnailWiths,
+                filePermissions,
+                subPath);
+    }
+
+    private FileMetadataResponse getFileMetadataResponse(
+            List<FileSaveResult> fileSaveResults,
+            List<String> userFilePermissions,
+            List<FilePermissionGroup> idAccessCodes,
+            String fileContentType, FileOwner fileOwner) {
+        Optional<FileMetadataResponse> result = fileSaveResults.stream()
+                .map(fileSaveResult-> MyFiles.builder()
+                    .fileDownloadPath(fileSaveResult.getFileDownloadUri())
+                    .fileHashCode(fileSaveResult.getFileHashCode())
+                    .fileOrgName(fileSaveResult.getFileOrgName())
+                    .filePath(fileSaveResult.getFileSavePath())
+                    .fileSize(fileSaveResult.getFileSize())
+                    .filePhyName(fileSaveResult.getFilePhyName())
+                    .fileStatus(FileStatus.Registered)
+                    .fileContentType(fileContentType)
+                    .userFilePermissions(userFilePermissions)
+                    .filePermissionGroups(idAccessCodes)
+                    .fileOwnerByUserCode(fileOwner)
+                    .postLinkType("")
+                    .postLinked(0L)
+                    .build())
+                .map(myFile -> myFilesRopository.save(myFile))
+                .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
+                .findFirst();
+        FileMetadataResponse response = result.orElseThrow(()->new FileStorageException("file make failed"));
+        response.addFileThumbnailImagePaths(getThumbnailImageDownloadPath(fileSaveResults));
+
+        return response;
     }
 
     /**
