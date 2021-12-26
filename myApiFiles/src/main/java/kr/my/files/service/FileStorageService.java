@@ -93,8 +93,6 @@ public class FileStorageService {
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
             String savePath = storeFile(fileRequest.getFile().getInputStream(), fileRequest.getUserFilePermissions(), uuidFileName, subPath);
             List<FileSaveResult> fileSaveResults = new ArrayList<>();
-            List<String> thumbnailImages = new ArrayList<>();
-
             MultipartFile file = fileRequest.getFile();
             String fileContentType = file.getContentType();
 
@@ -114,12 +112,14 @@ public class FileStorageService {
 
             if(fileRequest.getThumbnailWiths() !=null
                     && fileRequest.getThumbnailWiths().size() > 0){
-                thumbnailImages(
+
+                saveThumbnailImage(
                         fileRequest.getThumbnailWiths(),
                         fileRequest.getUserFilePermissions(),
                         uuidFileName,
                         subPath,
-                        savePath);
+                        savePath).stream()
+                        .forEach(fs->fileSaveResults.add(fs));
             }
 
             return getFileMetadataResponse(fileSaveResults, userFilePermissions,  idAccessCodes, fileContentType, fileOwner);
@@ -130,22 +130,36 @@ public class FileStorageService {
         return new FileMetadataResponse();
     }
 
-    private List<String> getThumbnailImageDownloadPath(List<FileSaveResult> fileSaveResults) {
-        return fileSaveResults.stream()
-                .map(fileSaveResult -> fileSaveResult.getFileDownloadUri())
-                .collect(Collectors.toList());
-    }
 
+    /**
+     * 썸네일 파일 및 저장 기능
+     * @param thumbnailWidths
+     */
+    private List<FileSaveResult> saveThumbnailImage(
+            List<Integer> thumbnailWidths,
+            List<String> userFilePermissions,
+            String rootImageName, String subPath, String filePath) throws IOException {
+        List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();
+        Path source = Paths.get(filePath);
+        InputStream rootImage = Files.newInputStream(source);
 
-    private List<FileSaveResult> thumbnailImages (
-            List<Integer> thumbnailWiths,
-            List<String> filePermissions,
-            String uuidFileName, String subPath, String savePath) throws IOException {
+        thumbnailWidths.stream().forEach(thumbnailWidth->{
+            String uuidFileName = getThumbnailName(rootImageName, thumbnailWidth.toString());
+            String savePath = storeFile(rootImage, userFilePermissions, uuidFileName, subPath);
+            String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
+            File outImage = new File(savePath);
 
-        return saveThumbnailImage(savePath, uuidFileName,
-                thumbnailWiths,
-                filePermissions,
-                subPath);
+            outImage= resizeImage(filePath , outImage, thumbnailWidth, 0,  getFileExt(rootImageName) );
+
+            thumbnailImagePaths.add(FileSaveResult.builder()
+                    .fileSavePath(savePath)
+                    .fileDownloadUri(fileDownloadUri)
+                    .filePhyName(outImage.getName())
+                    .fileHashCode(getFileHash(outImage))
+                    .fileOrgName(rootImageName)
+                    .fileSize(outImage.length()).build());
+        });
+        return thumbnailImagePaths;
     }
 
     private FileMetadataResponse getFileMetadataResponse(
@@ -178,37 +192,7 @@ public class FileStorageService {
         return response;
     }
 
-    /**
-     * 썸네일 파일 및 저장 기능
-     * @param thumbnailWidths
-     */
-    private List<FileSaveResult> saveThumbnailImage(String filePath,
-                                            String rootImageName,
-                                            List<Integer> thumbnailWidths,
-                                            List<String> userFilePermissions,
-                                            String subPath) throws IOException {
-        List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();
-        Path source = Paths.get(filePath);
-        InputStream rootImage = Files.newInputStream(source);
 
-        thumbnailWidths.stream().forEach(thumbnailWidth->{
-            String uuidFileName = getThumbnailName(rootImageName, thumbnailWidth.toString());
-            String savePath = storeFile(rootImage, userFilePermissions, uuidFileName, subPath);
-            String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
-            File outImage = new File(savePath);
-
-            outImage= resizeImage(filePath , outImage, thumbnailWidth, 0,  getFileExt(rootImageName) );
-
-            thumbnailImagePaths.add(FileSaveResult.builder()
-                .fileSavePath(savePath)
-                .fileDownloadUri(fileDownloadUri)
-                .filePhyName(outImage.getName())
-                .fileHashCode(getFileHash(outImage))
-                .fileOrgName(rootImageName)
-                .fileSize(outImage.length()).build());
-        });
-        return thumbnailImagePaths;
-    }
 
     /**
      * 파일 유니크 명을통해 파일 정보를 요청한다.
@@ -300,6 +284,23 @@ public class FileStorageService {
         return fileOwner;
     }
 
+    /**
+     * 파일저장 결과에서 다운로드 패스만 뽑는다.
+     * @param fileSaveResults
+     * @return
+     */
+    private List<String> getThumbnailImageDownloadPath(List<FileSaveResult> fileSaveResults) {
+        return fileSaveResults.stream()
+                .map(fileSaveResult -> fileSaveResult.getFileDownloadUri())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 사용자 정보의 해쉬를 반환한다.
+     * @param ownerDomainCode
+     * @param ownerAuthenticationCode
+     * @return
+     */
     private FileOwner ownerInformationConfirmation(String ownerDomainCode, String ownerAuthenticationCode){
         FileOwner fileOwner =  fileOwnerRepository
                 .findByOwnerDomainCheckSumAndOwnerAuthenticationCheckSum(
