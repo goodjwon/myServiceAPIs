@@ -49,7 +49,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -122,7 +121,7 @@ public class FileStorageService {
                         .forEach(fs->fileSaveResults.add(fs));
             }
 
-            return getFileMetadataResponse(fileSaveResults, userFilePermissions,  idAccessCodes, fileContentType, fileOwner);
+            return getFileMetadataResponseAndInfoSaveed(fileSaveResults, userFilePermissions,  idAccessCodes, fileContentType, fileOwner);
 
         }catch(IOException e){
             e.printStackTrace();
@@ -162,12 +161,22 @@ public class FileStorageService {
         return thumbnailImagePaths;
     }
 
-    private FileMetadataResponse getFileMetadataResponse(
+    /**
+     * 파일정보를 db에 저장하고 메타정보를 리턴한다.
+     * @param fileSaveResults
+     * @param userFilePermissions
+     * @param idAccessCodes
+     * @param fileContentType
+     * @param fileOwner
+     * @return
+     */
+    private FileMetadataResponse getFileMetadataResponseAndInfoSaveed(
             List<FileSaveResult> fileSaveResults,
             List<String> userFilePermissions,
             List<FilePermissionGroup> idAccessCodes,
             String fileContentType, FileOwner fileOwner) {
-        Optional<FileMetadataResponse> result = fileSaveResults.stream()
+
+        List<FileMetadataResponse> fileMetadataResponses = fileSaveResults.stream()
                 .map(fileSaveResult-> MyFiles.builder()
                     .fileDownloadPath(fileSaveResult.getFileDownloadUri())
                     .fileHashCode(fileSaveResult.getFileHashCode())
@@ -185,8 +194,9 @@ public class FileStorageService {
                     .build())
                 .map(myFile -> myFilesRopository.save(myFile))
                 .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
-                .findFirst();
-        FileMetadataResponse response = result.orElseThrow(()->new FileStorageException("file make failed"));
+                .collect(Collectors.toList());
+
+        FileMetadataResponse response = fileMetadataResponses.get(0);
         response.addFileThumbnailImagePaths(getThumbnailImageDownloadPath(fileSaveResults));
 
         return response;
