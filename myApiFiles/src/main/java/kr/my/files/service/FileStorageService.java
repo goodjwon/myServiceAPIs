@@ -83,10 +83,11 @@ public class FileStorageService {
 
     /**
      * 파일 업로드 및 정보 저장
+     *
      * @param fileRequest
      * @return
      */
-    public FileMetadataResponse saveFile(UploadFileRequest fileRequest)  {
+    public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
         try {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
             String subPath = getSubPath("yyyy/MM/dd/HH/mm");
@@ -105,12 +106,12 @@ public class FileStorageService {
                     .fileSize(file.getSize())
                     .build());
 
-            List<String> userFilePermissions =  addDefaultPermission(fileRequest.getUserFilePermissions());
-            List<FilePermissionGroup> idAccessCodes =  addUserAccessCode(fileRequest.getIdAccessCodes());
+            List<String> userFilePermissions = addDefaultPermission(fileRequest.getUserFilePermissions());
+            List<FilePermissionGroup> idAccessCodes = addUserAccessCode(fileRequest.getIdAccessCodes());
             FileOwner fileOwner = ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
 
-            if(fileRequest.getThumbnailWiths() !=null
-                    && fileRequest.getThumbnailWiths().size() > 0){
+            if (fileRequest.getThumbnailWiths() != null
+                    && fileRequest.getThumbnailWiths().size() > 0) {
 
                 saveThumbnailImage(
                         fileRequest.getThumbnailWiths(),
@@ -118,12 +119,12 @@ public class FileStorageService {
                         uuidFileName,
                         subPath,
                         savePath).stream()
-                        .forEach(fs->fileSaveResults.add(fs));
+                        .forEach(fs -> fileSaveResults.add(fs));
             }
 
-            return getFileMetadataResponseAndInfoSaveed(fileSaveResults, userFilePermissions,  idAccessCodes, fileContentType, fileOwner);
+            return getFileMetadataResponseAndInfoSaveed(fileSaveResults, userFilePermissions, idAccessCodes, fileContentType, fileOwner);
 
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return new FileMetadataResponse();
@@ -132,6 +133,7 @@ public class FileStorageService {
 
     /**
      * 썸네일 파일 및 저장 기능
+     *
      * @param thumbnailWidths
      */
     private List<FileSaveResult> saveThumbnailImage(
@@ -142,13 +144,13 @@ public class FileStorageService {
         Path source = Paths.get(filePath);
         InputStream rootImage = Files.newInputStream(source);
 
-        thumbnailWidths.stream().forEach(thumbnailWidth->{
+        thumbnailWidths.stream().forEach(thumbnailWidth -> {
             String uuidFileName = getThumbnailName(rootImageName, thumbnailWidth.toString());
             String savePath = storeFile(rootImage, userFilePermissions, uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
             File outImage = new File(savePath);
 
-            outImage= resizeImage(filePath , outImage, thumbnailWidth, 0,  getFileExt(rootImageName) );
+            outImage = resizeImage(filePath, outImage, thumbnailWidth, 0, getFileExt(rootImageName));
 
             thumbnailImagePaths.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
@@ -163,6 +165,7 @@ public class FileStorageService {
 
     /**
      * 파일정보를 db에 저장하고 메타정보를 리턴한다.
+     *
      * @param fileSaveResults
      * @param userFilePermissions
      * @param idAccessCodes
@@ -177,21 +180,21 @@ public class FileStorageService {
             String fileContentType, FileOwner fileOwner) {
 
         List<FileMetadataResponse> fileMetadataResponses = fileSaveResults.stream()
-                .map(fileSaveResult-> MyFiles.builder()
-                    .fileDownloadPath(fileSaveResult.getFileDownloadUri())
-                    .fileHashCode(fileSaveResult.getFileHashCode())
-                    .fileOrgName(fileSaveResult.getFileOrgName())
-                    .filePath(fileSaveResult.getFileSavePath())
-                    .fileSize(fileSaveResult.getFileSize())
-                    .filePhyName(fileSaveResult.getFilePhyName())
-                    .fileStatus(FileStatus.Registered)
-                    .fileContentType(fileContentType)
-                    .userFilePermissions(userFilePermissions)
-                    .filePermissionGroups(idAccessCodes)
-                    .fileOwnerByUserCode(fileOwner)
-                    .postLinkType("")
-                    .postLinked(0L)
-                    .build())
+                .map(fileSaveResult -> MyFiles.builder()
+                        .fileDownloadPath(fileSaveResult.getFileDownloadUri())
+                        .fileHashCode(fileSaveResult.getFileHashCode())
+                        .fileOrgName(fileSaveResult.getFileOrgName())
+                        .filePath(fileSaveResult.getFileSavePath())
+                        .fileSize(fileSaveResult.getFileSize())
+                        .filePhyName(fileSaveResult.getFilePhyName())
+                        .fileStatus(FileStatus.Registered)
+                        .fileContentType(fileContentType)
+                        .userFilePermissions(userFilePermissions)
+                        .filePermissionGroups(idAccessCodes)
+                        .fileOwnerByUserCode(fileOwner)
+                        .postLinkType("")
+                        .postLinked(0L)
+                        .build())
                 .map(myFile -> myFilesRopository.save(myFile))
                 .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
                 .collect(Collectors.toList());
@@ -203,19 +206,19 @@ public class FileStorageService {
     }
 
 
-
     /**
      * 파일 유니크 명을통해 파일 정보를 요청한다.
+     *
      * @param infoRequest
      * @return
      */
-    public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest){
-        if(!isOwnerRequest(infoRequest)){
+    public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest) {
+        if (!isOwnerRequest(infoRequest)) {
             throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
         }
 
         MyFiles files = myFilesRopository.findByFilePhyNameAndFileHashCode(
-                infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
+                        infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
                 .orElseThrow(() ->
                         new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
 
@@ -224,19 +227,20 @@ public class FileStorageService {
 
     /**
      * 파일을 읽어서 스트림으로 돌려준다.
+     *
      * @param fileInfoRequest
      * @return
      */
     public Resource loadFileAsResource(FileInfoRequest fileInfoRequest) {
         try {
-            if(!isOwnerRequest(fileInfoRequest)){
+            if (!isOwnerRequest(fileInfoRequest)) {
                 throw new OwnerNotMeachedException("File not found " + fileInfoRequest.getFilePhyName());
             }
 
             MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
                     fileInfoRequest.getFilePhyName(),
                     fileInfoRequest.getFileCheckSum()).orElseThrow(
-                            () -> new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName()));
+                    () -> new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName()));
 
             Path filePath = this.fileStorageLocation.resolve(myFiles.getFilePath()).normalize();
 
@@ -251,23 +255,24 @@ public class FileStorageService {
 
     /**
      * 소유자의 요청인지 확인
+     *
      * @param fileInfoRequest
      * @return
      */
-    private boolean isOwnerRequest(FileInfoRequest fileInfoRequest){
+    private boolean isOwnerRequest(FileInfoRequest fileInfoRequest) {
         boolean result = false;
         MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
-                fileInfoRequest.getFilePhyName(),
-                fileInfoRequest.getFileCheckSum())
-                    .orElseThrow(() -> new MyFileNotFoundException(fileInfoRequest.getFilePhyName()));
+                        fileInfoRequest.getFilePhyName(),
+                        fileInfoRequest.getFileCheckSum())
+                .orElseThrow(() -> new MyFileNotFoundException(fileInfoRequest.getFilePhyName()));
 
         FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileOwnerByUserCode().getOwnerSeq())
-                    .orElseThrow(()-> new OwnerNotMeachedException(fileInfoRequest.getFilePhyName()));
+                .orElseThrow(() -> new OwnerNotMeachedException(fileInfoRequest.getFilePhyName()));
 
         boolean a = fileOwner.getOwnerAuthenticationCheckSum().equals(fileInfoRequest.getOwnerAuthenticationCode());
         boolean b = fileOwner.getOwnerDomainCheckSum().equals(fileInfoRequest.getOwnerDomainCode());
         //todo 교체 필요
-        if(a && b) result = true;
+        if (a && b) result = true;
 
         return result;
 
@@ -275,15 +280,16 @@ public class FileStorageService {
 
     /**
      * 파일 소유주 확인
+     *
      * @param ownerDomainCode
      * @param ownerAuthenticationCode
      * @return
      */
-    private FileOwner ownerCheckSum(String ownerDomainCode, String ownerAuthenticationCode){
+    private FileOwner ownerCheckSum(String ownerDomainCode, String ownerAuthenticationCode) {
 
-        FileOwner fileOwner = ownerInformationConfirmation(ownerDomainCode, ownerAuthenticationCode );
+        FileOwner fileOwner = ownerInformationConfirmation(ownerDomainCode, ownerAuthenticationCode);
 
-        if(fileOwner == null){
+        if (fileOwner == null) {
             fileOwner = fileOwnerRepository.save(FileOwner.builder()
                     .ownerDomainCheckSum(makeMD5StringToChecksum(ownerDomainCode))
                     .ownerAuthenticationCode(makeMD5StringToChecksum(ownerAuthenticationCode))
@@ -296,6 +302,7 @@ public class FileStorageService {
 
     /**
      * 파일저장 결과에서 다운로드 패스만 뽑는다.
+     *
      * @param fileSaveResults
      * @return
      */
@@ -307,12 +314,13 @@ public class FileStorageService {
 
     /**
      * 사용자 정보의 해쉬를 반환한다.
+     *
      * @param ownerDomainCode
      * @param ownerAuthenticationCode
      * @return
      */
-    private FileOwner ownerInformationConfirmation(String ownerDomainCode, String ownerAuthenticationCode){
-        FileOwner fileOwner =  fileOwnerRepository
+    private FileOwner ownerInformationConfirmation(String ownerDomainCode, String ownerAuthenticationCode) {
+        FileOwner fileOwner = fileOwnerRepository
                 .findByOwnerDomainCheckSumAndOwnerAuthenticationCheckSum(
                         makeMD5StringToChecksum(ownerDomainCode),
                         makeMD5StringToChecksum(ownerAuthenticationCode)).orElse(null);
@@ -321,28 +329,30 @@ public class FileStorageService {
 
     /**
      * 추가로 access 할 수 있는 그룹을 지정한다.
+     *
      * @param idAccessCode
      * @return
      */
-    private List<FilePermissionGroup> addUserAccessCode(List<String> idAccessCode){
+    private List<FilePermissionGroup> addUserAccessCode(List<String> idAccessCode) {
         return collectionToStream(idAccessCode)
                 .map(a -> FilePermissionGroup.builder()
-                            .idAccessCode(a)
-                            .build())
+                        .idAccessCode(a)
+                        .build())
                 .collect(Collectors.toList());
     }
 
     /**
      * 기본으로 올린사람의 권한은 보장한다.
+     *
      * @return
      */
     private List<String> addDefaultPermission(List<String> permissions) {
         List<String> filePermissions = new ArrayList<>();   //todo 교체필요
-        if (permissions.size() == 0){
+        if (permissions.size() == 0) {
             filePermissions.add(OWNER_WRITE.getPermission());
             filePermissions.add(OWNER_READ.getPermission());
         } else {
-            permissions.forEach(permission->{
+            permissions.forEach(permission -> {
                 filePermissions.add(permission);
             });
         }
@@ -352,6 +362,7 @@ public class FileStorageService {
 
     /**
      * 업로드된 파일을 지정된 경로에 저장한다.
+     *
      * @param userFilePermissions
      * @return 저장된 경로를 반환한다.
      */
@@ -361,8 +372,8 @@ public class FileStorageService {
                              String subPath) {
         try {
             String rootPath =
-                    isPublicPermission(userFilePermissions)?
-                            fileStorageProperties.getPublicSpaceDir():
+                    isPublicPermission(userFilePermissions) ?
+                            fileStorageProperties.getPublicSpaceDir() :
                             fileStorageProperties.getUploadDir();
 
             this.fileStorageLocation = Paths.get(rootPath)
@@ -372,7 +383,7 @@ public class FileStorageService {
             Path targetLocation = this.fileStorageLocation.resolve(subPath); //경로 만들기.
 
             //경로가 없을 경우 만든다.
-            if(!Files.exists(targetLocation)){
+            if (!Files.exists(targetLocation)) {
                 Files.createDirectories(targetLocation);
             }
 
@@ -394,22 +405,22 @@ public class FileStorageService {
     private File resizeImage(String rootImagePath, File outImage, int targetWidth, int targetHeight, String imageFormat) {
         try {
             BufferedImage originalImage = ImageIO.read(new File(rootImagePath));
-            if( originalImage.getWidth() > 5000){
+            if (originalImage.getWidth() > 5000) {
                 throw new OverImagePixelException("3840 pixel over");
             }
 
-            if( originalImage.getHeight() > 5000){
+            if (originalImage.getHeight() > 5000) {
                 throw new OverImagePixelException("3840 pixel over");
             }
 
-            double widthRatio  = (double)targetWidth / (double)originalImage.getWidth();
-            int imageHeight = targetHeight > 0 ? targetHeight : (int)(originalImage.getHeight() * widthRatio);
+            double widthRatio = (double) targetWidth / (double) originalImage.getWidth();
+            int imageHeight = targetHeight > 0 ? targetHeight : (int) (originalImage.getHeight() * widthRatio);
 
-            log.info("originalImage.getType() >> "+String.valueOf(originalImage.getType()));
-            log.info("originalImage.getWidth() >> "+String.valueOf(originalImage.getWidth()));
-            log.info("originalImage.getHeight() >> "+ String.valueOf(originalImage.getHeight()));
-            log.info("widthRatio >> "+ widthRatio);
-            log.info("targetWidth >> "+ targetWidth + " imageHeight >> "+imageHeight);
+            log.info("originalImage.getType() >> " + String.valueOf(originalImage.getType()));
+            log.info("originalImage.getWidth() >> " + String.valueOf(originalImage.getWidth()));
+            log.info("originalImage.getHeight() >> " + String.valueOf(originalImage.getHeight()));
+            log.info("widthRatio >> " + widthRatio);
+            log.info("targetWidth >> " + targetWidth + " imageHeight >> " + imageHeight);
 
             Thumbnails.of(rootImagePath)
                     .size(targetWidth, imageHeight)
@@ -425,6 +436,7 @@ public class FileStorageService {
 
     /**
      * 이미지 파일정보에서 메다 정보를 추출하여 회신 한다.
+     *
      * @param rootImage
      * @return
      * @throws ImageProcessingException
@@ -437,16 +449,25 @@ public class FileStorageService {
         int orientation = 1; // 회전정보, 1. 0도, 3. 180도, 6. 270도, 8. 90도 회전한 정보
         double deggre = 0D;
 
-        if(directory != null){
+        if (directory != null) {
             orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION); // 회전정보
         }
 
         switch (orientation) {
-            case 6: deggre = 90D; break;
-            case 3: deggre = 180D;break;
-            case 8: deggre = 270D;break;
-            case 1: break;
-            default: orientation=1;break;
+            case 6:
+                deggre = 90D;
+                break;
+            case 3:
+                deggre = 180D;
+                break;
+            case 8:
+                deggre = 270D;
+                break;
+            case 1:
+                break;
+            default:
+                orientation = 1;
+                break;
         }
 
         return metadata;
@@ -464,19 +485,20 @@ public class FileStorageService {
                 || originalImage.getType() == BufferedImage.TYPE_BYTE_GRAY
                 || originalImage.getType() == BufferedImage.TYPE_BYTE_INDEXED) {
 
-            log.info("originalImage.getType() is "+originalImage.getType());
+            log.info("originalImage.getType() is " + originalImage.getType());
         }
     }
 
     /**
      * 요청에 public 인자가 있는지 점검한다.
+     *
      * @param userFilePermissions
      * @return public 인지 아닌지 리턴
      */
-    private boolean isPublicPermission(List<String> userFilePermissions){
+    private boolean isPublicPermission(List<String> userFilePermissions) {
         final boolean[] result = {false};
-        userFilePermissions.forEach(filePermission->{
-            if(filePermission.equals(PUBLIC_READ.getPermission())){
+        userFilePermissions.forEach(filePermission -> {
+            if (filePermission.equals(PUBLIC_READ.getPermission())) {
                 result[0] = true;
             }
         });
@@ -486,13 +508,14 @@ public class FileStorageService {
 
     /**
      * download path를 정한다.
+     *
      * @param userPermission
      * @param fullPath
      * @return
      */
-    private String getFileDownloadUri(List<String> userPermission, String fullPath){
-        String downloadPath = isPublicPermission(userPermission)?
-                this.fileStorageProperties.getDownloadPublicPath().concat(fullPath):
+    private String getFileDownloadUri(List<String> userPermission, String fullPath) {
+        String downloadPath = isPublicPermission(userPermission) ?
+                this.fileStorageProperties.getDownloadPublicPath().concat(fullPath) :
                 this.fileStorageProperties.getDownloadPath().concat(fullPath);
 
         return downloadPath;
@@ -500,14 +523,14 @@ public class FileStorageService {
 
     /**
      * multipart to File
+     *
      * @param multipart
      * @return
      * @throws IllegalStateException
      * @throws IOException
      */
-    private File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException
-    {
-        File convFile = new File( multipart.getOriginalFilename());
+    private File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException {
+        File convFile = new File(multipart.getOriginalFilename());
         multipart.transferTo(convFile);
 
         return convFile;
@@ -538,21 +561,23 @@ public class FileStorageService {
 
     /**
      * 요청받은 형태의 시간으로
+     *
      * @param format
      * @return
      */
-    private String getSubPath(String format){
+    private String getSubPath(String format) {
         DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern(format);
         return dtf3.format(LocalDateTime.now());
     }
 
     /**
      * 파일명 저장하기.
+     *
      * @param fileName
      * @return uuid 로 파일명이 변경된 파일명 리턴.
      * @throws IOException
      */
-    private String getUUIDFileName(String  fileName) {
+    private String getUUIDFileName(String fileName) {
         String ext = FilenameUtils.getExtension(
                 StringUtils.cleanPath(fileName));
 
@@ -563,11 +588,12 @@ public class FileStorageService {
 
     /**
      * 사이즈에 맞추어 _사이즈 형태로 반환한다.
+     *
      * @param originalFileName
      * @param imageSize
      * @return
      */
-    private String getThumbnailName(String  originalFileName, String imageSize) {
+    private String getThumbnailName(String originalFileName, String imageSize) {
         String ext = FilenameUtils.getExtension(
                 StringUtils.cleanPath(originalFileName));
 
@@ -579,15 +605,16 @@ public class FileStorageService {
 
     /**
      * file hash 값 찾기 만든가.
+     *
      * @param file
      * @return
      * @throws IOException
      */
-    private String getFileHash(File file)  {
+    private String getFileHash(File file) {
         String digestFileName = "";
-        try{
+        try {
             digestFileName = DigestUtils.md5Hex(new FileInputStream(file));
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             throw new FileStorageException("file md5 Hash is failed");
         }
         return digestFileName;
@@ -595,6 +622,7 @@ public class FileStorageService {
 
     /**
      * 파일 mine type을 확인 한다.
+     *
      * @param file
      * @return
      * @throws IOException
@@ -604,7 +632,7 @@ public class FileStorageService {
         return mimeType;
     }
 
-    private String getFileExt(String fileName){
+    private String getFileExt(String fileName) {
         return FilenameUtils.getExtension(
                 StringUtils.cleanPath(fileName));
     }
