@@ -2,25 +2,33 @@ package kr.my.files.api;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.my.files.common.RestDocsConfiguration;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -28,16 +36,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.test.web.servlet.MvcResult;
-
 import static kr.my.files.enums.UserFilePermissions.*;
-import static org.springframework.http.MediaType.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.http.MediaType.*;
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
@@ -45,6 +56,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureRestDocs
 @SpringBootTest
 @AutoConfigureMockMvc
+@ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
+@Import(RestDocsConfiguration.class)
 public class FileControllerTest {
 
 
@@ -94,19 +107,51 @@ public class FileControllerTest {
                         .getBytes(StandardCharsets.UTF_8));
 
         //then http multipart 요청
-        mockMvc.perform(multipart("/upload-file-permission-json-file")
-                .file(file)      //실제 파일
-                .file(metadata)) //요청 설정 파일
+        mockMvc.perform(
+                        multipart("/upload-file-permission-json-file").file(file).file(metadata))
                 .andDo(print())
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("originFileName").value(file.getOriginalFilename()))
                 .andExpect(jsonPath("fileName").exists())
                 .andExpect(jsonPath("fileDownloadUri").exists())
                 .andExpect(jsonPath("size").exists())
-        ;
+                .andDo(document(
+                                "upload-file",
+                                links(
+                                        halLinks(),
+                                        linkWithRel("self").description("link to self"),
+                                        linkWithRel("query-file").description("link to query users"),
+                                        linkWithRel("profile").description("link to api profile ")
+                                ),
+                                requestHeaders(
+                                        headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                        headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                                ),
+                                requestFields(
+                                        fieldWithPath("fileName").description("파일의 명칭 입니다."),
+                                        fieldWithPath("userFilePermissions").description("파일의 액세스 권한 입니다.."),
+                                        fieldWithPath("idAccessCodes").description("액세스 할수 있는 사용자 목록 입니다."),
+                                        fieldWithPath("ownerDomainCode").description("액세스 할 수 있는 사용자 그룹 입니다."),
+                                        fieldWithPath("ownerAuthenticationCode").description("사용자 그룹의 사용자 인증 코드 입니다.")
+                                ),
+                                responseHeaders(
+                                        headerWithName(HttpHeaders.LOCATION).description("새로 생성된 location header"),
+                                        headerWithName(HttpHeaders.CONTENT_TYPE).description("contentType은 hal-json 입니다.")
+                                ),
+                                relaxedResponseFields(
+                                        fieldWithPath("ownerDomainCode").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("ownerAuthenticationCode").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("fileName").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("fileDownloadUri").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("fileType").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("originFileName").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("checkSum").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("filePermissions").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("thumbnailImagePaths").description("sid 는 시스템 코드 입니다."),
+                                        fieldWithPath("filePermissionGroups").description("sid 는 시스템 코드 입니다."))
+                        )
+                );
     }
-
-
 
 
     @Test
@@ -194,12 +239,12 @@ public class FileControllerTest {
 
         //when then
         mockMvc.perform(post("/file-info")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaTypes.HAL_JSON)
-                .content(objectMapper.writeValueAsString(fileInfoRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(fileInfoRequest)))
                 .andDo(print())
                 .andExpect(status().is2xxSuccessful())
-                ;
+        ;
     }
 
     @Test
@@ -211,8 +256,8 @@ public class FileControllerTest {
         //when  file owner check
         //then  file download
         MvcResult result = mockMvc.perform(post("/file-download")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(fileInfoRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fileInfoRequest)))
                 .andExpect(status().is(200))
                 .andExpect(header().string("Accept-Ranges", "bytes"))
                 .andDo(print())
@@ -266,7 +311,6 @@ public class FileControllerTest {
     }
 
 
-
     @Test
     @DisplayName("파일 다운로드 기록 저장")
     void saveFileDownloadPath() throws Exception {
@@ -275,7 +319,6 @@ public class FileControllerTest {
         //then
 
     }
-
 
 
     @Test
@@ -288,7 +331,7 @@ public class FileControllerTest {
 
     @Test
     @DisplayName("그룹이 있으면 그룹 권한이 있어야 한다. 그렇지 않을 경우 유효하지 않은 에러 출력")
-    void hasGroupMustBeGroupPermission(){
+    void hasGroupMustBeGroupPermission() {
         //given
         //when
         //then
@@ -297,7 +340,7 @@ public class FileControllerTest {
 
     @Test
     @DisplayName("그룹권한이 있으면 그룹이  있어야 한다. 그렇지 않을 경우 유효하지 않은 에러 출력")
-    void hasGroupPermissionMustBeGroup(){
+    void hasGroupPermissionMustBeGroup() {
         //given
         //when
         //then
@@ -332,12 +375,12 @@ public class FileControllerTest {
                 .ownerAuthenticationCode(userCode)
                 .build());
 
-        return  FileInfoRequest.builder()
-                    .filePhyName(response.getFileName())
-                    .fileCheckSum(response.getCheckSum())
-                    .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
-                    .ownerDomainCode(response.getOwnerDomainCode())
-                    .build();
+        return FileInfoRequest.builder()
+                .filePhyName(response.getFileName())
+                .fileCheckSum(response.getCheckSum())
+                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
+                .ownerDomainCode(response.getOwnerDomainCode())
+                .build();
     }
 
 
@@ -366,7 +409,7 @@ public class FileControllerTest {
                 .ownerAuthenticationCode(userCode)
                 .build());
 
-       return FileInfoRequest.builder()
+        return FileInfoRequest.builder()
                 .filePhyName(response.getFileName())
                 .fileCheckSum(response.getCheckSum())
                 .ownerAuthenticationCode(response.getOwnerAuthenticationCode())

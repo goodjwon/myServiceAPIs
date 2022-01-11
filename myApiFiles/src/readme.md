@@ -145,7 +145,7 @@ file.protect-space-dir= D${user.home}/Download
 {"ownerDomainCode":"19103e6354655886cb2f46880a4ae116","ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531","fileName":"95b02285-a79a-4b7e-944d-c53d73b8907d.txt","fileDownloadUri":"/file-download/95b02285-a79a-4b7e-944d-c53d73b8907d.txt","fileType":"text/plain","originFileName":"hello.txt","checkSum":"65a8e27d8879283831b664bd8b7f0ad4","size":13,"filePermissions":["owner:write","owner:read"],"thumbnailImagePaths":null,"filePermissionGroups":[{"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},{"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},{"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]}
 ```
 #### 파일 다운로드 요청
-```json
+```
     {
        "filePhyName":"2d60c7b2-7b42-4745-9829-817287376c36.txt",
        "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
