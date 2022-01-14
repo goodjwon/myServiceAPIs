@@ -7,7 +7,6 @@ import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
 import java.util.List;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -23,7 +22,6 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
     private long size;
     private List<String> filePermissions;
     private List<String> thumbnailImagePaths;
-
     private List<FilePermissionGroup> filePermissionGroups;
 
     @Builder
@@ -40,13 +38,10 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
         this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
     }
 
-
     public void addFilePermission(List<String> filePermissions){
         this.filePermissions = filePermissions;
     }
     public void addFileThumbnailImagePaths(List<String> thumbnailImagePaths){
         this.thumbnailImagePaths = thumbnailImagePaths;
     }
-
-
 }

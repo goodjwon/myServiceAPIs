@@ -4,8 +4,10 @@ import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.service.FileStorageService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,18 +23,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
+@RequiredArgsConstructor
 public class FileController {
 
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
-
     private final FileStorageService fileStorageService;
-
     private final FileAssembler fileAssembler;
-
-    public FileController(FileStorageService fileStorageService, FileAssembler fileAssembler) {
-        this.fileStorageService = fileStorageService;
-        this.fileAssembler = fileAssembler;
-    }
 
     /**
      * Form 과 json 파일로 요청
@@ -53,8 +49,11 @@ public class FileController {
         FileMetadataResponse fileMetadataResponse
                 = fileStorageService.saveFile(fileRequest);
 
+        fileMetadataResponse = fileAssembler.toModel(fileMetadataResponse);
 
-        return ResponseEntity.ok(fileMetadataResponse);
+
+        return ResponseEntity.created(fileMetadataResponse.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(fileMetadataResponse);
     }
 
     /**

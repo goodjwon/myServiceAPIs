@@ -108,9 +108,13 @@ public class FileControllerTest {
 
         //then http multipart 요청
         mockMvc.perform(
-                        multipart("/upload-file-permission-json-file").file(file).file(metadata))
+                        multipart("/upload-file-permission-json-file")
+                                .file(file)
+                                .file(metadata)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaTypes.HAL_JSON))
                 .andDo(print())
-                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("originFileName").value(file.getOriginalFilename()))
                 .andExpect(jsonPath("fileName").exists())
                 .andExpect(jsonPath("fileDownloadUri").exists())
@@ -120,8 +124,7 @@ public class FileControllerTest {
                                 links(
                                         halLinks(),
                                         linkWithRel("self").description("link to self"),
-                                        linkWithRel("query-file").description("link to query users"),
-                                        linkWithRel("profile").description("link to api profile ")
+                                        linkWithRel("query-file").description("link to query file")
                                 ),
                                 requestHeaders(
                                         headerWithName(HttpHeaders.ACCEPT).description("accept header"),
