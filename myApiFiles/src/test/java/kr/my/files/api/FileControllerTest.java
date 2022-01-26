@@ -103,57 +103,41 @@ public class FileControllerTest {
                                 .idAccessCodes(filePermissionGroup)
                                 .ownerDomainCode(ownerDomain)
                                 .ownerAuthenticationCode(userCode)
-                                .build())
-                        .getBytes(StandardCharsets.UTF_8));
+                                .build()).getBytes(StandardCharsets.UTF_8));
 
         //then http multipart 요청
-        mockMvc.perform(
-                        multipart("/upload-file-permission-json-file")
-                                .file(file)
-                                .file(metadata)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .accept(MediaTypes.HAL_JSON))
+        mockMvc.perform(multipart("/upload-file-permission-json-file")
+                        .file(file)
+                        .file(metadata)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("originFileName").value(file.getOriginalFilename()))
                 .andExpect(jsonPath("fileName").exists())
                 .andExpect(jsonPath("fileDownloadUri").exists())
                 .andExpect(jsonPath("size").exists())
-                .andDo(document(
-                                "upload-file",
-                                links(
-                                        halLinks(),
-                                        linkWithRel("self").description("link to self"),
-                                        linkWithRel("query-file").description("link to query file")
-                                ),
-                                requestHeaders(
-                                        headerWithName(HttpHeaders.ACCEPT).description("accept header"),
-                                        headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
-                                ),
-                                requestFields(
-                                        fieldWithPath("fileName").description("파일의 명칭 입니다."),
-                                        fieldWithPath("userFilePermissions").description("파일의 액세스 권한 입니다.."),
-                                        fieldWithPath("idAccessCodes").description("액세스 할수 있는 사용자 목록 입니다."),
-                                        fieldWithPath("ownerDomainCode").description("액세스 할 수 있는 사용자 그룹 입니다."),
-                                        fieldWithPath("ownerAuthenticationCode").description("사용자 그룹의 사용자 인증 코드 입니다.")
-                                ),
-                                responseHeaders(
-                                        headerWithName(HttpHeaders.LOCATION).description("새로 생성된 location header"),
-                                        headerWithName(HttpHeaders.CONTENT_TYPE).description("contentType은 hal-json 입니다.")
-                                ),
-                                relaxedResponseFields(
-                                        fieldWithPath("ownerDomainCode").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("ownerAuthenticationCode").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("fileName").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("fileDownloadUri").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("fileType").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("originFileName").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("checkSum").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("filePermissions").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("thumbnailImagePaths").description("sid 는 시스템 코드 입니다."),
-                                        fieldWithPath("filePermissionGroups").description("sid 는 시스템 코드 입니다."))
-                        )
-                );
+                .andDo(
+                    document("upload-file",
+                        links(halLinks(),
+                            linkWithRel("self").description("link to self"),
+                            linkWithRel("query-file").description("link to query file")),
+                        requestHeaders(
+                            headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                            headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")),
+                        requestPartFields("metadata",
+                            fieldWithPath("file").description("업로드할 파일"),
+                            fieldWithPath("files").description("파일을 다중으로 업로드 할 경우 활용"),
+                            fieldWithPath("maxWith").description("이미지일 경우 최대 가로 길이"),
+                            fieldWithPath("maxHeight").description("이미지일 경우 최대 세로 길이"),
+                            fieldWithPath("thumbnailWiths").description("이미지일 경우 썸네일 가로 길이."),
+                            fieldWithPath("fileName").description("파일의 명칭 입니다."),
+                            fieldWithPath("userFilePermissions").description("파일의 액세스 권한 입니다.."),
+                            fieldWithPath("idAccessCodes").description("액세스 할수 있는 사용자 목록 입니다."),
+                            fieldWithPath("ownerDomainCode").description("액세스 할 수 있는 도메인 입니다."),
+                            fieldWithPath("ownerAuthenticationCode").description("사용자 그룹의 사용자 인증 코드 입니다."))
+                    )
+            );
     }
 
 
