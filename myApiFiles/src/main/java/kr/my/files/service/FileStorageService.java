@@ -67,7 +67,7 @@ import static kr.my.files.enums.UserFilePermissions.*;
 public class FileStorageService {
 
     private Path fileStorageLocation;
-    private MyFilesRepository myFilesRopository;
+    private MyFilesRepository myFilesRepository;
     private FileOwnerRepository fileOwnerRepository;
     private FileStorageProperties fileStorageProperties;
 
@@ -76,7 +76,7 @@ public class FileStorageService {
                               MyFilesRepository myFilesRopository,
                               FileOwnerRepository fileOwnerRepository) {
 
-        this.myFilesRopository = myFilesRopository;
+        this.myFilesRepository = myFilesRopository;
         this.fileOwnerRepository = fileOwnerRepository;
         this.fileStorageProperties = fileStorageProperties;
     }
@@ -100,7 +100,7 @@ public class FileStorageService {
                     .fileSavePath(savePath)
                     .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
                     .filePhyName(uuidFileName)
-                    .fileHashCode(getFileHash(multipartToFile(fileRequest.getFile())))
+                    .fileHashCode(getFileHash(savePath))
                     .fileContentType(fileContentType)
                     .fileOrgName(file.getOriginalFilename())
                     .fileSize(file.getSize())
@@ -136,7 +136,7 @@ public class FileStorageService {
      *
      * @param thumbnailWidths
      */
-    private List<FileSaveResult> saveThumbnailImage(
+    private List<FileSaveResult> saveThumbnailImage (
             List<Integer> thumbnailWidths,
             List<String> userFilePermissions,
             String rootImageName, String subPath, String filePath) throws IOException {
@@ -149,17 +149,17 @@ public class FileStorageService {
             String savePath = storeFile(rootImage, userFilePermissions, uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
             File outImage = new File(savePath);
-
-            outImage = resizeImage(filePath, outImage, thumbnailWidth, 0, getFileExt(rootImageName));
+            resizeImage(filePath, savePath, thumbnailWidth, 0, getFileExt(rootImageName));
 
             thumbnailImagePaths.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
                     .fileDownloadUri(fileDownloadUri)
                     .filePhyName(outImage.getName())
-                    .fileHashCode(getFileHash(outImage))
+                    .fileHashCode(getFileHash(savePath))
                     .fileOrgName(rootImageName)
                     .fileSize(outImage.length()).build());
         });
+
         return thumbnailImagePaths;
     }
 
@@ -195,7 +195,7 @@ public class FileStorageService {
                         .postLinkType("")
                         .postLinked(0L)
                         .build())
-                .map(myFile -> myFilesRopository.save(myFile))
+                .map(myFile -> myFilesRepository.save(myFile))
                 .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
                 .collect(Collectors.toList());
 
@@ -217,7 +217,7 @@ public class FileStorageService {
             throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
         }
 
-        MyFiles files = myFilesRopository.findByFilePhyNameAndFileHashCode(
+        MyFiles files = myFilesRepository.findByFilePhyNameAndFileHashCode(
                         infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
                 .orElseThrow(() ->
                         new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
@@ -237,7 +237,7 @@ public class FileStorageService {
                 throw new OwnerNotMeachedException("File not found " + fileInfoRequest.getFilePhyName());
             }
 
-            MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
+            MyFiles myFiles = myFilesRepository.findByFilePhyNameAndFileHashCode(
                     fileInfoRequest.getFilePhyName(),
                     fileInfoRequest.getFileCheckSum()).orElseThrow(
                     () -> new MyFileNotFoundException("File not found " + fileInfoRequest.getFilePhyName()));
@@ -261,7 +261,7 @@ public class FileStorageService {
      */
     private boolean isOwnerRequest(FileInfoRequest fileInfoRequest) {
         boolean result = false;
-        MyFiles myFiles = myFilesRopository.findByFilePhyNameAndFileHashCode(
+        MyFiles myFiles = myFilesRepository.findByFilePhyNameAndFileHashCode(
                         fileInfoRequest.getFilePhyName(),
                         fileInfoRequest.getFileCheckSum())
                 .orElseThrow(() -> new MyFileNotFoundException(fileInfoRequest.getFilePhyName()));
@@ -402,9 +402,11 @@ public class FileStorageService {
     /**
      * 업로드 파일이 이미지 파일경우 리사이즈 버전을 만든다.
      */
-    private File resizeImage(String rootImagePath, File outImage, int targetWidth, int targetHeight, String imageFormat) {
+    private void resizeImage(String rootImagePath, String savePath, int targetWidth, int targetHeight, String imageFormat)  {
         try {
             BufferedImage originalImage = ImageIO.read(new File(rootImagePath));
+            File outImage = new File(savePath);
+
             if (originalImage.getWidth() > 5000) {
                 throw new OverImagePixelException("3840 pixel over");
             }
@@ -415,6 +417,7 @@ public class FileStorageService {
 
             double widthRatio = (double) targetWidth / (double) originalImage.getWidth();
             int imageHeight = targetHeight > 0 ? targetHeight : (int) (originalImage.getHeight() * widthRatio);
+
 
             log.info("originalImage.getType() >> " + String.valueOf(originalImage.getType()));
             log.info("originalImage.getWidth() >> " + String.valueOf(originalImage.getWidth()));
@@ -427,11 +430,9 @@ public class FileStorageService {
                     .outputFormat(imageFormat)
                     .outputQuality(1)
                     .toFile(outImage);
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        }catch (IOException ioe){
+            ioe.printStackTrace();
         }
-        return outImage;
     }
 
     /**
@@ -610,11 +611,13 @@ public class FileStorageService {
      * @return
      * @throws IOException
      */
-    private String getFileHash(File file) {
+    private String getFileHash(String path) {
+        File file = new File(path);
         String digestFileName = "";
         try {
             digestFileName = DigestUtils.md5Hex(new FileInputStream(file));
         } catch (IOException ioe) {
+            ioe.printStackTrace();
             throw new FileStorageException("file md5 Hash is failed");
         }
         return digestFileName;

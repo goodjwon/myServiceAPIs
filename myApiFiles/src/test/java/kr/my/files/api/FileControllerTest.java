@@ -29,6 +29,8 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -104,6 +106,13 @@ public class FileControllerTest {
                                 .ownerDomainCode(ownerDomain)
                                 .ownerAuthenticationCode(userCode)
                                 .build()).getBytes(StandardCharsets.UTF_8));
+
+        File tempFile = new File("src/test/resources/data/permission.json");
+
+        try (OutputStream os = new FileOutputStream(tempFile)) {
+            os.write(metadata.getBytes());
+        }
+
 
         //then http multipart 요청
         mockMvc.perform(multipart("/upload-file-permission-json-file")
