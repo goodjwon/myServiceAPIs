@@ -95,6 +95,7 @@ public class FileStorageService {
             List<FileSaveResult> fileSaveResults = new ArrayList<>();
             MultipartFile file = fileRequest.getFile();
             String fileContentType = file.getContentType();
+            boolean thumbnailFlag = false;
 
             fileSaveResults.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
@@ -110,9 +111,8 @@ public class FileStorageService {
             List<FilePermissionGroup> idAccessCodes = addUserAccessCode(fileRequest.getIdAccessCodes());
             FileOwner fileOwner = ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
 
-            if (fileRequest.getThumbnailWiths() != null
-                    && fileRequest.getThumbnailWiths().size() > 0) {
-
+            if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().size() > 0) {
+                thumbnailFlag = true;
                 saveThumbnailImage(
                         fileRequest.getThumbnailWiths(),
                         fileRequest.getUserFilePermissions(),
@@ -122,7 +122,7 @@ public class FileStorageService {
                         .forEach(fs -> fileSaveResults.add(fs));
             }
 
-            return getFileMetadataResponseAndInfoSaveed(fileSaveResults, userFilePermissions, idAccessCodes, fileContentType, fileOwner);
+            return getFileMetadataResponseAndInfoSaved(fileSaveResults, userFilePermissions, idAccessCodes, fileContentType, fileOwner, thumbnailFlag);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,11 +173,11 @@ public class FileStorageService {
      * @param fileOwner
      * @return
      */
-    private FileMetadataResponse getFileMetadataResponseAndInfoSaveed(
+    private FileMetadataResponse getFileMetadataResponseAndInfoSaved(
             List<FileSaveResult> fileSaveResults,
             List<String> userFilePermissions,
             List<FilePermissionGroup> idAccessCodes,
-            String fileContentType, FileOwner fileOwner) {
+            String fileContentType, FileOwner fileOwner, boolean thumbnailFlag) {
 
         List<FileMetadataResponse> fileMetadataResponses = fileSaveResults.stream()
                 .map(fileSaveResult -> MyFiles.builder()
@@ -200,7 +200,7 @@ public class FileStorageService {
                 .collect(Collectors.toList());
 
         FileMetadataResponse response = fileMetadataResponses.get(0);
-        response.addFileThumbnailImagePaths(getThumbnailImageDownloadPath(fileSaveResults));
+        if(thumbnailFlag) response.addFileThumbnailImagePaths(getThumbnailImageDownloadPath(fileSaveResults));
 
         return response;
     }
