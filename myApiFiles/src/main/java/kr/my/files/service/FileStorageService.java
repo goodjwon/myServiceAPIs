@@ -136,15 +136,13 @@ public class FileStorageService {
      *
      * @param thumbnailWidths
      */
-    private List<FileSaveResult> saveThumbnailImage (
-            List<Integer> thumbnailWidths,
-            List<String> userFilePermissions,
+    private List<FileSaveResult> saveThumbnailImage (List<Integer> thumbnailWidths, List<String> userFilePermissions,
             String rootImageName, String subPath, String filePath) throws IOException {
         List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();
         Path source = Paths.get(filePath);
         InputStream rootImage = Files.newInputStream(source);
 
-        thumbnailWidths.stream().forEach(thumbnailWidth -> {
+        for (Integer thumbnailWidth : thumbnailWidths) {
             String uuidFileName = getThumbnailName(rootImageName, thumbnailWidth.toString());
             String savePath = storeFile(rootImage, userFilePermissions, uuidFileName, subPath);
             String fileDownloadUri = getFileDownloadUri(userFilePermissions, uuidFileName);
@@ -158,7 +156,7 @@ public class FileStorageService {
                     .fileHashCode(getFileHash(savePath))
                     .fileOrgName(rootImageName)
                     .fileSize(outImage.length()).build());
-        });
+        }
 
         return thumbnailImagePaths;
     }
@@ -180,21 +178,23 @@ public class FileStorageService {
             String fileContentType, FileOwner fileOwner, boolean thumbnailFlag) {
 
         List<FileMetadataResponse> fileMetadataResponses = fileSaveResults.stream()
-                .map(fileSaveResult -> MyFiles.builder()
-                        .fileDownloadPath(fileSaveResult.getFileDownloadUri())
-                        .fileHashCode(fileSaveResult.getFileHashCode())
-                        .fileOrgName(fileSaveResult.getFileOrgName())
-                        .filePath(fileSaveResult.getFileSavePath())
-                        .fileSize(fileSaveResult.getFileSize())
-                        .filePhyName(fileSaveResult.getFilePhyName())
-                        .fileStatus(FileStatus.Registered)
-                        .fileContentType(fileContentType)
-                        .userFilePermissions(userFilePermissions)
-                        .filePermissionGroups(idAccessCodes)
-                        .fileOwnerByUserCode(fileOwner)
-                        .postLinkType("")
-                        .postLinked(0L)
-                        .build())
+                .map(fileSaveResult -> {
+                    return MyFiles.builder()
+                            .fileDownloadPath(fileSaveResult.getFileDownloadUri())
+                            .fileHashCode(fileSaveResult.getFileHashCode())
+                            .fileOrgName(fileSaveResult.getFileOrgName())
+                            .filePath(fileSaveResult.getFileSavePath())
+                            .fileSize(fileSaveResult.getFileSize())
+                            .filePhyName(fileSaveResult.getFilePhyName())
+                            .fileStatus(FileStatus.Registered)
+                            .fileContentType(fileContentType)
+                            .userFilePermissions(userFilePermissions)
+                            .filePermissionGroups(idAccessCodes)
+                            .fileOwnerByUserCode(fileOwner)
+                            .postLinkType("")
+                            .postLinked(0L)
+                            .build();
+                })
                 .map(myFile -> myFilesRepository.save(myFile))
                 .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
                 .collect(Collectors.toList());
