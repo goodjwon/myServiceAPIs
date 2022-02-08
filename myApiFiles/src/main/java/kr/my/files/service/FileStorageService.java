@@ -82,7 +82,7 @@ public class FileStorageService {
     }
 
     /**
-     * 파일 업로드 및 정보 저장
+     * 파일 업로드 요청 처리
      *
      * @param fileRequest
      * @return
@@ -130,11 +130,15 @@ public class FileStorageService {
         return new FileMetadataResponse();
     }
 
-
     /**
      * 썸네일 파일 및 저장 기능
-     *
      * @param thumbnailWidths
+     * @param userFilePermissions
+     * @param rootImageName
+     * @param subPath
+     * @param filePath
+     * @return
+     * @throws IOException
      */
     private List<FileSaveResult> saveThumbnailImage (List<Integer> thumbnailWidths, List<String> userFilePermissions,
             String rootImageName, String subPath, String filePath) throws IOException {
