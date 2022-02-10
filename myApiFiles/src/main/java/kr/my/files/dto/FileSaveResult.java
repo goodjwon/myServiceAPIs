@@ -14,5 +14,4 @@ public class FileSaveResult {
     private String fileSavePath;
     private Long fileSize;
     private String filePhyName;
-
 }

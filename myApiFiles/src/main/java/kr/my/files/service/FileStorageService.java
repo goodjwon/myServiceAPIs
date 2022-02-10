@@ -97,6 +97,7 @@ public class FileStorageService {
             String fileContentType = file.getContentType();
             boolean thumbnailFlag = false;
 
+            //원본파일 정보 처리
             fileSaveResults.add(FileSaveResult.builder()
                     .fileSavePath(savePath)
                     .fileDownloadUri(getFileDownloadUri(fileRequest.getUserFilePermissions(), uuidFileName))
@@ -111,6 +112,7 @@ public class FileStorageService {
             List<FilePermissionGroup> idAccessCodes = addUserAccessCode(fileRequest.getIdAccessCodes());
             FileOwner fileOwner = ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
 
+            //썸네일 정보 처리
             if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().size() > 0) {
                 thumbnailFlag = true;
                 saveThumbnailImage(
@@ -167,7 +169,6 @@ public class FileStorageService {
 
     /**
      * 파일정보를 db에 저장하고 메타정보를 리턴한다.
-     *
      * @param fileSaveResults
      * @param userFilePermissions
      * @param idAccessCodes
