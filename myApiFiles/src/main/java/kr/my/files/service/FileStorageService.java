@@ -95,7 +95,6 @@ public class FileStorageService {
             List<FileSaveResult> fileSaveResults = new ArrayList<>();
             MultipartFile file = fileRequest.getFile();
             String fileContentType = file.getContentType();
-            boolean thumbnailFlag = false;
 
             //원본파일 정보 처리
             fileSaveResults.add(FileSaveResult.builder()
@@ -108,28 +107,41 @@ public class FileStorageService {
                     .fileSize(file.getSize())
                     .build());
 
-            List<String> userFilePermissions = addDefaultPermission(fileRequest.getUserFilePermissions());
-            List<FilePermissionGroup> idAccessCodes = addUserAccessCode(fileRequest.getIdAccessCodes());
-            FileOwner fileOwner = ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode());
-
-            //썸네일 정보 처리
-            if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().size() > 0) {
-                thumbnailFlag = true;
-                saveThumbnailImage(
-                        fileRequest.getThumbnailWiths(),
-                        fileRequest.getUserFilePermissions(),
-                        uuidFileName,
-                        subPath,
-                        savePath).stream()
-                        .forEach(fs -> fileSaveResults.add(fs));
-            }
-
-            return getFileMetadataResponseAndInfoSaved(fileSaveResults, userFilePermissions, idAccessCodes, fileContentType, fileOwner, thumbnailFlag);
+            return getFileMetadataResponseAndInfoSaved(fileSaveResults, fileContentType,
+                    addDefaultPermission(fileRequest.getUserFilePermissions()),
+                    addUserAccessCode(fileRequest.getIdAccessCodes()),
+                    ownerCheckSum(fileRequest.getOwnerDomainCode(), fileRequest.getOwnerAuthenticationCode()),
+                    isThumbnailFlag(fileRequest, uuidFileName, subPath, savePath, fileSaveResults));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         return new FileMetadataResponse();
+    }
+
+    /**
+     * 썸네일 이미지의 처리.
+     * @param fileRequest
+     * @param uuidFileName
+     * @param subPath
+     * @param savePath
+     * @param fileSaveResults
+     * @return
+     * @throws IOException
+     */
+    private boolean isThumbnailFlag(UploadFileRequest fileRequest, String uuidFileName, String subPath, String savePath, List<FileSaveResult> fileSaveResults) throws IOException {
+        boolean thumbnailFlag = false;
+        if (fileRequest.getThumbnailWiths() != null && fileRequest.getThumbnailWiths().size() > 0) {
+            thumbnailFlag = true;
+            saveThumbnailImage(
+                    fileRequest.getThumbnailWiths(),
+                    fileRequest.getUserFilePermissions(),
+                    uuidFileName,
+                    subPath,
+                    savePath).stream()
+                    .forEach(fs -> fileSaveResults.add(fs));
+        }
+        return thumbnailFlag;
     }
 
     /**
@@ -178,9 +190,10 @@ public class FileStorageService {
      */
     private FileMetadataResponse getFileMetadataResponseAndInfoSaved(
             List<FileSaveResult> fileSaveResults,
+            String fileContentType,
             List<String> userFilePermissions,
             List<FilePermissionGroup> idAccessCodes,
-            String fileContentType, FileOwner fileOwner, boolean thumbnailFlag) {
+            FileOwner fileOwner, boolean thumbnailFlag) {
 
         List<FileMetadataResponse> fileMetadataResponses = fileSaveResults.stream()
                 .map(fileSaveResult -> {
@@ -612,7 +625,7 @@ public class FileStorageService {
     /**
      * file hash 값 찾기 만든가.
      *
-     * @param file
+     * @param path
      * @return
      * @throws IOException
      */
