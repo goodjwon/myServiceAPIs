@@ -6,6 +6,7 @@ import lombok.*;
 import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,9 +23,9 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
     private String originFileName;
     private String checkSum;
     private long size;
-    private List<String> filePermissions;
-    private List<String> thumbnailImagePaths;
-    private List<String> filePermissionGroups;
+    private List<String> filePermissions = new ArrayList<>();;
+    private List<String> thumbnailImagePaths = new ArrayList<>();;
+    private List<String> filePermissionGroups = new ArrayList<>();
 
     @Builder
     public FileMetadataResponse(MyFiles myFiles) {

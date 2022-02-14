@@ -158,8 +158,8 @@ file.protect-space-dir= D${user.home}/Download
 {
    "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
    "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
-   "fileName":"353960a2-1a90-47dd-982d-e80c1f729d18.txt",
-   "fileDownloadUri":"/file-download/353960a2-1a90-47dd-982d-e80c1f729d18.txt",
+   "fileName":"4446de97-f770-4434-9665-25d3934c9beb.txt",
+   "fileDownloadUri":"/file-download/4446de97-f770-4434-9665-25d3934c9beb.txt",
    "fileType":"text/plain",
    "originFileName":"hello.txt",
    "checkSum":"65a8e27d8879283831b664bd8b7f0ad4",
@@ -170,7 +170,9 @@ file.protect-space-dir= D${user.home}/Download
       "group:read",
       "group:write"
    ],
-   "thumbnailImagePaths":null,
+   "thumbnailImagePaths":[
+      
+   ],
    "filePermissionGroups":[
       "$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju",
       "f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7",
@@ -182,10 +184,10 @@ file.protect-space-dir= D${user.home}/Download
       },
       "self":[
          {
-            "href":"http://localhost:8080/file-download/353960a2-1a90-47dd-982d-e80c1f729d18.txt"
+            "href":"http://localhost:8080/file-download/4446de97-f770-4434-9665-25d3934c9beb.txt"
          },
          {
-            "href":"http://localhost:8080/353960a2-1a90-47dd-982d-e80c1f729d18.txt"
+            "href":"http://localhost:8080/4446de97-f770-4434-9665-25d3934c9beb.txt"
          }
       ]
    }
