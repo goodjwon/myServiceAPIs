@@ -155,45 +155,41 @@ file.protect-space-dir= D${user.home}/Download
 ```
 #### 파일 다운로드 응답
 ``` json
-    {
-        파일명 :"e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        다운로드 경로 (도메인 이하 경로만 전달, 도메인은 프로그램 처리) : "/file-download/e95d7235-8b58-43a4-8e00-bd603b6a3f0a.txt",
-        파일 타입 :"text/plain",
-        원본파일명 : "hello.txt",
-        해쉬값:"65a8e27d8879283831b664bd8b7f0ad4",
-        크기: 13,
-        파일 권한: ["OWNER_WRITE","OWNER_READ"]
-        파일 액세스 가능자: [{"idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"},{"idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"},{"idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"}]
-        작성일: 
-        소유자:  
-    }
-
-    {
-       "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
-       "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
-       "fileName":"95b02285-a79a-4b7e-944d-c53d73b8907d.txt",
-       "fileDownloadUri":"/file-download/95b02285-a79a-4b7e-944d-c53d73b8907d.txt",
-       "fileType":"text/plain",
-       "originFileName":"hello.txt",
-       "checkSum":"65a8e27d8879283831b664bd8b7f0ad4",
-       "size":13,
-       "filePermissions":[
-          "owner:write",
-          "owner:read"
-       ],
-       "thumbnailImagePaths":null,
-       "filePermissionGroups":[
-          {
-             "idAccessCode":"$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju"
-          },
-          {
-             "idAccessCode":"f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"
-          },
-          {
-             "idAccessCode":"fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"
-          }
-       ]
-    }
+{
+   "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
+   "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
+   "fileName":"353960a2-1a90-47dd-982d-e80c1f729d18.txt",
+   "fileDownloadUri":"/file-download/353960a2-1a90-47dd-982d-e80c1f729d18.txt",
+   "fileType":"text/plain",
+   "originFileName":"hello.txt",
+   "checkSum":"65a8e27d8879283831b664bd8b7f0ad4",
+   "size":13,
+   "filePermissions":[
+      "owner:write",
+      "owner:read",
+      "group:read",
+      "group:write"
+   ],
+   "thumbnailImagePaths":null,
+   "filePermissionGroups":[
+      "$2a$10$TuKGiVuLJl3xhaVPDNj3EOcjDyKrMcFcc7m.d.PsFX7UjbTgrl1Ju",
+      "f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7",
+      "fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"
+   ],
+   "_links":{
+      "query-file":{
+         "href":"http://localhost:8080"
+      },
+      "self":[
+         {
+            "href":"http://localhost:8080/file-download/353960a2-1a90-47dd-982d-e80c1f729d18.txt"
+         },
+         {
+            "href":"http://localhost:8080/353960a2-1a90-47dd-982d-e80c1f729d18.txt"
+         }
+      ]
+   }
+}
      fileDownloadUri : 파일 업로드시 서비스되고 있는 도메인에 대해 정보 노출 (대표도메인으로 셋팅 할 수 있게 함.)
 ```
 

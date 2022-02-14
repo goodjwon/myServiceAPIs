@@ -7,6 +7,8 @@ import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -33,15 +35,15 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
         this.size = myFiles.getFileSize();
         this.checkSum = myFiles.getFileHashCode();
         this.filePermissions = myFiles.getUserFilePermissions();
-        this.filePermissionGroups = myFiles.getFilePermissionGroups();
         this.ownerAuthenticationCode = myFiles.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum();
         this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
     }
 
-    public void addFilePermission(List<String> filePermissions){
-        this.filePermissions = filePermissions;
-    }
     public void addFileThumbnailImagePaths(List<String> thumbnailImagePaths){
         this.thumbnailImagePaths = thumbnailImagePaths;
+    }
+
+    public void addFilePermissionGroup(List<FilePermissionGroup> groups){
+        this.filePermissionGroups = groups.stream().map(group->group.getIdAccessCode()).collect(Collectors.toList());
     }
 }

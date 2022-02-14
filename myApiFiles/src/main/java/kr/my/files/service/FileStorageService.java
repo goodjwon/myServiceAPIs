@@ -214,7 +214,11 @@ public class FileStorageService {
                             .build();
                 })
                 .map(myFile -> myFilesRepository.save(myFile))
-                .map(myFile -> FileMetadataResponse.builder().myFiles(myFile).build())
+                .map(myFile -> {
+                    FileMetadataResponse metadataResponse = FileMetadataResponse.builder().myFiles(myFile).build();
+                    metadataResponse.addFilePermissionGroup(myFile.getFilePermissionGroups());
+                    return metadataResponse;
+                })
                 .collect(Collectors.toList());
 
         FileMetadataResponse response = fileMetadataResponses.get(0);
