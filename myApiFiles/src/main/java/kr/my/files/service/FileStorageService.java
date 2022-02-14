@@ -180,7 +180,7 @@ public class FileStorageService {
     }
 
     /**
-     * 파일정보를 db에 저장하고 메타정보를 리턴한다.
+     * 원본 파일 및 썸네잎 파일 정보를 db에 저장하고 메타정보를 리턴한다.
      * @param fileSaveResults
      * @param userFilePermissions
      * @param idAccessCodes

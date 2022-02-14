@@ -22,7 +22,7 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
     private long size;
     private List<String> filePermissions;
     private List<String> thumbnailImagePaths;
-    private List<FilePermissionGroup> filePermissionGroups;
+    private List<String> filePermissionGroups;
 
     @Builder
     public FileMetadataResponse(MyFiles myFiles) {
