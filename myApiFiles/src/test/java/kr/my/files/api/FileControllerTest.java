@@ -309,13 +309,11 @@ public class FileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filePermissionAddRequest)))
                 .andExpect(status().is(201))
-                .andExpect(header().string("Accept-Ranges", "bytes"))
+                .andExpect(jsonPath("filePermissionGroups[3]").value("afb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57"))
                 .andDo(print())
                 .andReturn();
-
         assertThat(result.getResponse().getStatus(), is(equalTo(201)));
-        assertThat(result.getResponse().getContentAsByteArray().length, is(equalTo(13)));
-        assertThat(result.getResponse().getContentType(), is(equalTo("application/json;charset=UTF-8")));
+        assertThat(result.getResponse().getContentType(), is(equalTo("application/hal+json;charset=UTF-8")));
 
     }
 

@@ -129,17 +129,16 @@ public class FileStorageService {
                 .filter(file->file.getFileHashCode().equals(fileRequest.getFileCheckSum()))
                 .filter(file->file.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum().equals(fileRequest.getOwnerAuthenticationCode()))
                 .filter(file->file.getFileOwnerByUserCode().getOwnerDomainCheckSum().equals(fileRequest.getOwnerDomainCode()))
-                .orElseThrow(() ->
-                        new MyFileNotFoundException("File not found " + fileRequest.getFilePhyName()));
-
+                .orElseThrow(() -> new OwnerNotMeachedException("File not found " + fileRequest.getFilePhyName()));
 
         myFile.addFilePermissionGroups(addUserAccessCode(fileRequest.getAdditionalIdAccessCode()));
 
-
         myFilesRepository.save(myFile);
 
+        FileMetadataResponse metadataResponse = FileMetadataResponse.builder().myFiles(myFile).build();
+        metadataResponse.addFilePermissionGroup(myFile.getFilePermissionGroups());
 
-        return FileMetadataResponse.builder().myFiles(myFile).build();
+        return metadataResponse;
     }
 
     /**
