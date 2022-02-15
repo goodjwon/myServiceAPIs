@@ -9,7 +9,9 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by goodjwon on 16. 1. 16..
@@ -48,11 +50,12 @@ public class MyFiles extends BaseTimeEntity {
     private String fileContentType;
 
     @ElementCollection
-    private List<String> userFilePermissions;
+    private List<String> userFilePermissions = new ArrayList<>();
 
     @ElementCollection
+    @OrderColumn
     @CollectionTable(name="file_permission_group", joinColumns = @JoinColumn(name = "file_seq"))
-    private List<FilePermissionGroup> filePermissionGroups;
+    private List<FilePermissionGroup> filePermissionGroups = new ArrayList<>();
 
     /**
      * 파일을 조회 하면 해당 사용자를 나오게 한다.
@@ -81,5 +84,12 @@ public class MyFiles extends BaseTimeEntity {
         this.userFilePermissions = userFilePermissions;
         this.fileOwnerByUserCode = fileOwnerByUserCode;
         this.filePermissionGroups = filePermissionGroups;
+    }
+
+    public void addFilePermissionGroups(List<FilePermissionGroup> additionalIdAccessCode){
+
+        for(FilePermissionGroup permissionGroup: additionalIdAccessCode){
+            this.filePermissionGroups.add(permissionGroup);
+        }
     }
 }

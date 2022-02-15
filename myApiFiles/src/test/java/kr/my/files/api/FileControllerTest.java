@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.my.files.common.RestDocsConfiguration;
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
+import kr.my.files.dto.FilePermissionAddRequest;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -144,7 +146,24 @@ public class FileControllerTest {
                             fieldWithPath("userFilePermissions").description("파일의 액세스 권한 입니다.."),
                             fieldWithPath("idAccessCodes").description("액세스 할수 있는 사용자 목록 입니다."),
                             fieldWithPath("ownerDomainCode").description("액세스 할 수 있는 도메인 입니다."),
-                            fieldWithPath("ownerAuthenticationCode").description("사용자 그룹의 사용자 인증 코드 입니다."))
+                            fieldWithPath("ownerAuthenticationCode").description("사용자 그룹의 사용자 인증 코드 입니다.")),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.LOCATION).description("새로 생성된 location header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("contentType은 hal-json 입니다.")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("ownerDomainCode").description("소유자 도메인 해쉬코드"),
+                                fieldWithPath("ownerAuthenticationCode").description("소유자 인증 코드"),
+                                fieldWithPath("fileName").description("파일명"),
+                                fieldWithPath("fileDownloadUri").description("파일 다운로드 url"),
+                                fieldWithPath("fileType").description("파일유형"),
+                                fieldWithPath("originFileName").description("원본 파일명"),
+                                fieldWithPath("checkSum").description("파일 체크썸(md5)"),
+                                fieldWithPath("size").description("파일크기"),
+                                fieldWithPath("filePermissions").description("파일권한"),
+                                fieldWithPath("thumbnailImagePaths").description("파일패스"),
+                                fieldWithPath("filePermissionGroups").description("파일 엑세스 권한")
+                        )
                     )
             );
     }
@@ -265,6 +284,42 @@ public class FileControllerTest {
     }
 
     @Test
+    @DisplayName("파일 열람권한을 추가 한다. filePermissionGroups")
+    void addFilePermissionGroups() throws Exception {
+        //given
+        FileInfoRequest fileInfoRequest = uploadBefore();
+
+        List<String> addFilePermission = new ArrayList<>();
+
+        addFilePermission.add("afb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57");
+        addFilePermission.add("bfb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57");
+        addFilePermission.add("cfb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57");
+
+        FilePermissionAddRequest filePermissionAddRequest = FilePermissionAddRequest.builder()
+                .filePhyName(fileInfoRequest.getFilePhyName())
+                .fileCheckSum(fileInfoRequest.getFileCheckSum())
+                .ownerDomainCode(fileInfoRequest.getOwnerDomainCode())
+                .ownerAuthenticationCode(fileInfoRequest.getOwnerAuthenticationCode())
+                .additionalIdAccessCode(addFilePermission)
+                .build();
+
+        //when  file owner check
+        //then  file download
+        MvcResult result = mockMvc.perform(post("/file-permission-add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filePermissionAddRequest)))
+                .andExpect(status().is(201))
+                .andExpect(header().string("Accept-Ranges", "bytes"))
+                .andDo(print())
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus(), is(equalTo(201)));
+        assertThat(result.getResponse().getContentAsByteArray().length, is(equalTo(13)));
+        assertThat(result.getResponse().getContentType(), is(equalTo("application/json;charset=UTF-8")));
+
+    }
+
+    @Test
     @DisplayName("모두 공계 파일일때 별도 지정된 디렉터리로 저장 여부 확인")
     void uploadFPublicFile() throws Exception {
         //given
@@ -342,6 +397,12 @@ public class FileControllerTest {
         //then
     }
 
+
+    /**
+     * 테스트전에 파일 정보를 생성하고 요청 할 수 있는 정보를 리턴한다.
+     * @return
+     * @throws Exception
+     */
     private FileInfoRequest uploadBefore() throws Exception {
         //Given 파일생성
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt",

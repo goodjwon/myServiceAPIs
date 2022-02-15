@@ -8,10 +8,7 @@ import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 
 import kr.my.files.dao.FileOwnerRepository;
-import kr.my.files.dto.FileInfoRequest;
-import kr.my.files.dto.FileMetadataResponse;
-import kr.my.files.dto.FileSaveResult;
-import kr.my.files.dto.UploadFileRequest;
+import kr.my.files.dto.*;
 import kr.my.files.entity.FileOwner;
 import kr.my.files.entity.FilePermissionGroup;
 import kr.my.files.entity.MyFiles;
@@ -117,6 +114,32 @@ public class FileStorageService {
             e.printStackTrace();
         }
         return new FileMetadataResponse();
+    }
+
+    /**
+     *
+     * @param fileRequest
+     * @return
+     */
+    public FileMetadataResponse addFilePermission(FilePermissionAddRequest fileRequest) {
+
+        MyFiles myFile = myFilesRepository.findByFilePhyNameAndFileHashCode(
+                        fileRequest.getFilePhyName(), fileRequest.getFileCheckSum())
+                .filter(file->file.getFilePhyName().equals(fileRequest.getFilePhyName()))
+                .filter(file->file.getFileHashCode().equals(fileRequest.getFileCheckSum()))
+                .filter(file->file.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum().equals(fileRequest.getOwnerAuthenticationCode()))
+                .filter(file->file.getFileOwnerByUserCode().getOwnerDomainCheckSum().equals(fileRequest.getOwnerDomainCode()))
+                .orElseThrow(() ->
+                        new MyFileNotFoundException("File not found " + fileRequest.getFilePhyName()));
+
+
+        myFile.addFilePermissionGroups(addUserAccessCode(fileRequest.getAdditionalIdAccessCode()));
+
+
+        myFilesRepository.save(myFile);
+
+
+        return FileMetadataResponse.builder().myFiles(myFile).build();
     }
 
     /**
@@ -350,7 +373,7 @@ public class FileStorageService {
     }
 
     /**
-     * 추가로 access 할 수 있는 그룹을 지정한다.
+     * 기존 파일에 추가로 access 할 수 있는 그룹을 지정한다. 이미지 파일이 있고 계약관련자만 보여준다. 이렬 경우 퍼미션 그룹만 추가 하여 읽을 수 있는 권한을 추가 한다.
      *
      * @param idAccessCode
      * @return

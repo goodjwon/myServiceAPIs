@@ -2,6 +2,7 @@ package kr.my.files.api;
 
 import kr.my.files.dto.FileInfoRequest;
 import kr.my.files.dto.FileMetadataResponse;
+import kr.my.files.dto.FilePermissionAddRequest;
 import kr.my.files.dto.UploadFileRequest;
 import kr.my.files.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,17 @@ public class FileController {
 
         fileMetadataResponse = fileAssembler.toModel(fileMetadataResponse);
 
+
+        return ResponseEntity.created(fileMetadataResponse.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(fileMetadataResponse);
+    }
+
+    @PostMapping("/file-permission-add")
+    public ResponseEntity<FileMetadataResponse> addFilePermissionGroups(
+            @RequestBody FilePermissionAddRequest request) {
+        FileMetadataResponse fileMetadataResponse = fileStorageService.addFilePermission(request);
+
+        fileMetadataResponse = fileAssembler.toModel(fileMetadataResponse);
 
         return ResponseEntity.created(fileMetadataResponse.getRequiredLink(IanaLinkRelations.SELF).toUri())
                 .body(fileMetadataResponse);
