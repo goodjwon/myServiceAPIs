@@ -1,3 +1,4 @@
+
 = Rest Docs Sample API Document
 goodjwon
 :doctype: book
@@ -10,7 +11,7 @@ goodjwon
 [[introduction]]
 == 소개
 
-S2B Ormanization Spring Rest Docs API
+S2B FileApi Spring Rest Docs API
 
 
 [[overview]]
@@ -113,23 +114,23 @@ API에 관계없이 아래 사항을 지켜주셔야 합니다.
 |===
 
 [[users]]
-== S2B organization User Apis
+== S2B FileManager Apis
 
 === 사용자 생성 요청 (Request)
-[[create-user]]
-==== 사용자(Officer) 생성
+[[create-file]]
+==== file 생성
 
-`POST` 요청을 사용해서 새 사용자(Officer)를 만들 수 있다.
+`POST (mutilty part)` 요청을 사용해서 파일을 업로드 할 수 있다.
 
 CURL:
 
-operation::create-user[snippets='request-fields,curl-request,http-response,links']
+operation::upload-file[snippets='request-part-metadata-fields,curl-request,http-response,links']
 
 include::{snippets}/upload-file/curl-request.adoc[]
 
 Request Parameters:
 
-include::{snippets}/upload-file/request-fields.adoc[]
+include::{snippets}/upload-file/request-part-metadata-fields.adoc[]
 
 Request HTTP Example:
 
@@ -139,19 +140,37 @@ include::{snippets}/upload-file/http-request.adoc[]
 
 Response Fields:
 
-//include::{snippets}/upload-file/response-fields.adoc[]
+include::{snippets}/upload-file/http-response.adoc[]
 
 Response HTTP Example:
 
-include::{snippets}/upload-file/http-response.adoc[]
+include::{snippets}/upload-file/response-body.adoc[]
 
 
-=== 부서별 사용자 조회
+=== 파일정보 조회
 
 `Get` 요청을 사용해서 기존 이벤트 하나를 조회할 수 있다.
 
-Request Parameters:
-include::{snippets}/upload-file/request-parameters.adoc[]
+Request Field:
+include::{snippets}/upload-file/request-fields.adoc[]
+
+Reponse Body:
+
+operation::upload-file[snippets='request-fields,curl-request,http-response,links']
 
 
-operation::query-users-pages[snippets='request-fields,curl-request,http-response,links']
+
+image::images/2021-05-07 07;50;02.png[]
+
+
+image::images/2021-05-11 08;08;34.png[]
+
+
+* 파일업로드 및 정보 동시저장 추가
+* https://blogs.perficient.com/2020/07/27/requestbody-and-multipart-on-spring-boot/
+
+image::images/2021-05-12 07;57;42.png[]
+
+
+
+* 파일업로드 및 정보 동시저장 json post man test 방법 image::images/2021-05-21 08;21;53.PNG[]

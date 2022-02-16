@@ -74,9 +74,11 @@ public class FileController {
     @PostMapping("/file-info")
     public ResponseEntity<FileMetadataResponse> fileInfo(
             @RequestBody @Valid FileInfoRequest fileInfoRequest) {
-        FileMetadataResponse response = fileStorageService.getFileInfo(fileInfoRequest);
+        FileMetadataResponse fileMetadataResponse = fileStorageService.getFileInfo(fileInfoRequest);
 
-        return ResponseEntity.ok(response);
+        fileMetadataResponse = fileAssembler.toModel(fileMetadataResponse);
+
+        return ResponseEntity.ok(fileMetadataResponse);
     }
 
     /**
