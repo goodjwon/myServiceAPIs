@@ -1,4 +1,10 @@
-group = 'kr.my.members'
+plugins {
+    id 'org.springframework.boot' version '2.6.3'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+group = 'kr.my.member'
 version = '0.0.1-SNAPSHOT'
-description = 'my members'
+description = 'my member'
 sourceCompatibility = '11'
