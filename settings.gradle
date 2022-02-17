@@ -4,4 +4,9 @@
  * This project uses @Incubating APIs which are subject to change.
  */
 
-rootProject.name = 'files'
+rootProject.name = 'myServiceAPIs'
+include 'myApiFiles'
+include 'myApiMembers'
+include 'myApiPosts'
+include 'myHash'
+

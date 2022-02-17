@@ -18,23 +18,19 @@ allprojects {
 }
 
 subprojects {
-    plugins {
-        id 'org.springframework.boot' version '2.6.3'
-        id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-        id 'java'
-    }
+    apply plugin:  'java'
+    apply plugin:  'org.springframework.boot'
+    apply plugin:  'io.spring.dependency-management'
+
+    sourceCompatibility = 11
 
     repositories {
         mavenCentral()
     }
 
-    apply plugin: 'java'
-    apply plugin: 'org.springframework.boot'
-    apply plugin: 'io.spring.dependency-management'
-
-    sourceCompatibility = 11
 
     dependencies {
+
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-hateoas'
@@ -56,4 +52,9 @@ subprojects {
         testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
     }
+
+    project(':myApiFiles')
+    project(':myApiMembers')
+    project(':myApiPosts')
+    project(':myHash')
 }
