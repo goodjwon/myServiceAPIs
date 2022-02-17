@@ -1,0 +1,4 @@
+group = 'kr.my.posts'
+version = '0.0.1-SNAPSHOT'
+description = 'my posts'
+sourceCompatibility = '11'

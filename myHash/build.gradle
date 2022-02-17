@@ -10,7 +10,7 @@ plugins {
     id 'java'
 }
 
-group = 'kr.my.files'
+group = 'kr.my.hash'
 version = '0.0.1-SNAPSHOT'
-description = 'my files'
+description = 'my hash'
 sourceCompatibility = '11'

@@ -1,0 +1,4 @@
+group = 'kr.my.members'
+version = '0.0.1-SNAPSHOT'
+description = 'my members'
+sourceCompatibility = '11'
