@@ -230,9 +230,9 @@ public class FileControllerTest {
                                 links(halLinks(),
                                         linkWithRel("self").description("link to self"),
                                         linkWithRel("query-file").description("link to query file")),
-                                requestHeaders(
-                                        headerWithName(HttpHeaders.ACCEPT).description("accept header"),
-                                        headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")),
+//                                requestHeaders(
+//                                        headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+//                                        headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")),
                                 requestPartFields("metadata",
                                         fieldWithPath("file").description("업로드할 파일"),
                                         fieldWithPath("files").description("파일을 다중으로 업로드 할 경우 활용"),

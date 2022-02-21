@@ -39,7 +39,7 @@ public class FileController {
      * @return
      */
     @ExceptionHandler(value = IOException.class)
-    @PostMapping(value = "/upload-file-permission-json-file")
+    @PostMapping(value = "/upload-file-permission-json-file" )
     public ResponseEntity<FileMetadataResponse> uploadFileAndPerMissionWithJsonFile(
             @RequestPart(value = "file") MultipartFile file,
             @RequestPart(value = "metadata") UploadFileRequest fileRequest) {
@@ -76,9 +76,7 @@ public class FileController {
             @RequestBody @Valid FileInfoRequest fileInfoRequest) {
         FileMetadataResponse fileMetadataResponse = fileStorageService.getFileInfo(fileInfoRequest);
 
-        fileMetadataResponse = fileAssembler.toModel(fileMetadataResponse);
-
-        return ResponseEntity.ok(fileMetadataResponse);
+        return ResponseEntity.ok(fileAssembler.toModel(fileMetadataResponse));
     }
 
     /**

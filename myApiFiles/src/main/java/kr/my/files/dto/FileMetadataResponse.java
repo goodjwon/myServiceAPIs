@@ -1,9 +1,11 @@
 package kr.my.files.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import kr.my.files.entity.FilePermissionGroup;
 import kr.my.files.entity.MyFiles;
 import lombok.*;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,9 +13,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-@AllArgsConstructor
-@ToString
 @Getter
+@EqualsAndHashCode(callSuper = false)
+@Relation(collectionRelation = "files", itemRelation = "file")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileMetadataResponse extends RepresentationModel<FileMetadataResponse> implements Serializable {
     private String ownerDomainCode;
     private String ownerAuthenticationCode;
