@@ -3,11 +3,11 @@ spring:
     generate-ddl: 'true'
     properties:
       hibernate:
-        use_sql_comments: true;
-        format_sql: 'true'
+        use_sql_comments: 'false';
+        format_sql: 'false'
     hibernate:
       ddl-auto: update
-    show-sql: 'true'
+    show-sql: 'false'
     database-platform: org.hibernate.dialect.MySQL8Dialect
   datasource:
     driverClassName: com.mysql.jdbc.Driver
@@ -34,10 +34,16 @@ file:
   download-public-path: /public-file-download/
   upload-dir: ${user.home}/Download
   download-path: /file-download/
-logging:
-  level:
-    org:
-      hibernate:
-        type:
-          descriptor:
-            sql: trace;
+
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        type:
+#          descriptor:
+#            sql: trace;
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
