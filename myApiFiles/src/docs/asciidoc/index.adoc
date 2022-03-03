@@ -1,3 +1,7 @@
+ifndef::snippets[]
+:snippets: ./build/generated-snippets
+endif::[]
+
 
 = Rest Docs Sample API Document
 goodjwon
@@ -154,22 +158,22 @@ include::{snippets}/upload-file/response-body.adoc[]
 Request Field:
 include::{snippets}/upload-file/request-fields.adoc[]
 
-Reponse Body:
+Response Body:
 
 operation::upload-file[snippets='request-fields,curl-request,http-response,links']
 
 
 
-image::images/2021-05-07 07;50;02.png[]
+image::images/2021-05-07_075002.PNG[]
 
 
-image::images/2021-05-11 08;08;34.png[]
+image::images/2021-05-11_080834.PNG[]
 
 
 * 파일업로드 및 정보 동시저장 추가
 * https://blogs.perficient.com/2020/07/27/requestbody-and-multipart-on-spring-boot/
 
-image::images/2021-05-12 07;57;42.png[]
+image::images/2021-05-12_075742.PNG[]
 
 
 
