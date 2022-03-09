@@ -53,6 +53,7 @@ import org.apache.tika.Tika;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.imageio.ImageIO;
+import javax.transaction.Transactional;
 
 import static kr.my.files.commons.utils.StringUtils.collectionToStream;
 import static kr.my.files.commons.utils.StringUtils.makeMD5StringToChecksum;
@@ -84,6 +85,7 @@ public class FileStorageService {
      * @param fileRequest
      * @return
      */
+    @Transactional
     public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
         try {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
@@ -121,6 +123,7 @@ public class FileStorageService {
      * @param fileRequest
      * @return
      */
+    @Transactional
     public FileMetadataResponse addFilePermission(FilePermissionAddRequest fileRequest) {
 
         MyFiles myFile = myFilesRepository.findByFilePhyNameAndFileHashCode(
@@ -176,6 +179,7 @@ public class FileStorageService {
      * @return
      * @throws IOException
      */
+    @Transactional
     private List<FileSaveResult> saveThumbnailImage (List<Integer> thumbnailWidths, List<String> userFilePermissions,
             String rootImageName, String subPath, String filePath) throws IOException {
         List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();

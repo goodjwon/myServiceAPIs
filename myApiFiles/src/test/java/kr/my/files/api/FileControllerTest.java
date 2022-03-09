@@ -316,23 +316,6 @@ public class FileControllerTest {
     }
 
     @Test
-    @DisplayName("파일 저장시 일자에 맞는 디렉터리 구조로 저장 되는지 확인")
-    void checkFileSavePath() throws Exception {
-        //given
-        DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm");
-        //private method test
-        Method method = fileStorageService.getClass().getDeclaredMethod("getSubPath", String.class);
-        method.setAccessible(true);
-        String values = dtf3.format(LocalDateTime.now());
-
-        //when
-        String argument = (String) method.invoke(fileStorageService, "yyyy/MM/dd/HH/mm");
-
-        //then
-        assertEquals(values, argument);
-    }
-
-    @Test
     @DisplayName("파일에 대해서 다운로드 정보를 수신하고 파일을 내려 받는다.")
     void downloadFile() throws Exception {
         //given
