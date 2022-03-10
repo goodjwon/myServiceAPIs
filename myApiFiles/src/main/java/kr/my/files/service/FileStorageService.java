@@ -179,7 +179,6 @@ public class FileStorageService {
      * @return
      * @throws IOException
      */
-    @Transactional
     private List<FileSaveResult> saveThumbnailImage (List<Integer> thumbnailWidths, List<String> userFilePermissions,
             String rootImageName, String subPath, String filePath) throws IOException {
         List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();
