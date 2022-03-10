@@ -30,17 +30,33 @@ public class FileMetadataResponse extends RepresentationModel<FileMetadataRespon
     private List<String> thumbnailImagePaths = new ArrayList<>();;
     private List<String> filePermissionGroups = new ArrayList<>();
 
+//    @Builder
+//    public FileMetadataResponse(MyFiles myFiles) {
+//        this.fileName = myFiles.getFilePhyName();
+//        this.fileDownloadUri = myFiles.getFileDownloadPath();
+//        this.fileType = myFiles.getFileContentType();
+//        this.originFileName = myFiles.getFileOrgName();
+//        this.size = myFiles.getFileSize();
+//        this.checkSum = myFiles.getFileHashCode();
+//        this.filePermissions = myFiles.getUserFilePermissions();
+//        this.ownerAuthenticationCode = myFiles.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum();
+//        this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
+//    }
+
     @Builder
-    public FileMetadataResponse(MyFiles myFiles) {
-        this.fileName = myFiles.getFilePhyName();
-        this.fileDownloadUri = myFiles.getFileDownloadPath();
-        this.fileType = myFiles.getFileContentType();
-        this.originFileName = myFiles.getFileOrgName();
-        this.size = myFiles.getFileSize();
-        this.checkSum = myFiles.getFileHashCode();
-        this.filePermissions = myFiles.getUserFilePermissions();
-        this.ownerAuthenticationCode = myFiles.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum();
-        this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
+    public FileMetadataResponse(String fileName, String fileDownloadUri,
+                                String fileType, String orgName, long size,
+                                String checkSum, List<String> filePermission,
+                                String ownerAuthenticationCode, String  ownerDomainCode  ) {
+        this.fileName = fileName;
+        this.fileDownloadUri = fileDownloadUri;
+        this.fileType = fileType;
+        this.originFileName = orgName;
+        this.size = size;
+        this.checkSum = checkSum;
+        this.filePermissions = filePermission;
+        this.ownerAuthenticationCode = ownerAuthenticationCode;
+        this.ownerDomainCode = ownerDomainCode;
     }
 
     public void addFileThumbnailImagePaths(List<String> thumbnailImagePaths){

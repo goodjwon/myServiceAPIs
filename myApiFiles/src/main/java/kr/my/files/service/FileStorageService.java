@@ -126,8 +126,8 @@ public class FileStorageService {
     @Transactional
     public FileMetadataResponse addFilePermission(FilePermissionAddRequest fileRequest) {
 
-        MyFiles myFile = myFilesRepository.findByFilePhyNameAndFileHashCode(
-                        fileRequest.getFilePhyName(), fileRequest.getFileCheckSum())
+        MyFiles myFile = myFilesRepository
+                .findByFilePhyNameAndFileHashCode(fileRequest.getFilePhyName(), fileRequest.getFileCheckSum())
                 .filter(file->file.getFilePhyName().equals(fileRequest.getFilePhyName()))
                 .filter(file->file.getFileHashCode().equals(fileRequest.getFileCheckSum()))
                 .filter(file->file.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum().equals(fileRequest.getOwnerAuthenticationCode()))
@@ -138,7 +138,31 @@ public class FileStorageService {
 
         myFilesRepository.save(myFile);
 
-        FileMetadataResponse metadataResponse = FileMetadataResponse.builder().myFiles(myFile).build();
+//        FileMetadataResponse metadataResponse = FileMetadataResponse.builder().myFiles(myFile).build();
+        FileMetadataResponse metadataResponse = FileMetadataResponse.builder()
+                .fileName(myFile.getFileOrgName())
+                .fileDownloadUri(myFile.getFileDownloadPath())
+                .fileType(myFile.getFileContentType())
+                .size(myFile.getFileSize())
+                .checkSum(myFile.getFileHashCode())
+                .filePermission(myFile.getUserFilePermissions())
+                .ownerAuthenticationCode(myFile.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum())
+                .ownerDomainCode(myFile.getFileOwnerByUserCode().getOwnerDomainCheckSum())
+                .build();
+
+//    public FileMetadataResponse(MyFiles myFiles) {
+//        this.fileName = myFiles.getFilePhyName();
+//        this.fileDownloadUri = myFiles.getFileDownloadPath();
+//        this.fileType = myFiles.getFileContentType();
+//        this.originFileName = myFiles.getFileOrgName();
+//        this.size = myFiles.getFileSize();
+//        this.checkSum = myFiles.getFileHashCode();
+//        this.filePermissions = myFiles.getUserFilePermissions();
+//        this.ownerAuthenticationCode = myFiles.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum();
+//        this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
+//    }
+
+
         metadataResponse.addFilePermissionGroup(myFile.getFilePermissionGroups());
 
         return metadataResponse;
@@ -180,7 +204,7 @@ public class FileStorageService {
      * @throws IOException
      */
     @Transactional
-    private List<FileSaveResult> saveThumbnailImage (List<Integer> thumbnailWidths, List<String> userFilePermissions,
+    public List<FileSaveResult> saveThumbnailImage (List<Integer> thumbnailWidths, List<String> userFilePermissions,
             String rootImageName, String subPath, String filePath) throws IOException {
         List<FileSaveResult> thumbnailImagePaths = new ArrayList<>();
         Path source = Paths.get(filePath);
@@ -260,15 +284,15 @@ public class FileStorageService {
      * @param infoRequest
      * @return
      */
+    @Transactional
     public FileMetadataResponse getFileInfo(FileInfoRequest infoRequest) {
         if (!isOwnerRequest(infoRequest)) {
             throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
         }
 
-        MyFiles files = myFilesRepository.findByFilePhyNameAndFileHashCode(
-                        infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
-                .orElseThrow(() ->
-                        new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
+        MyFiles files = myFilesRepository
+                .findByFilePhyNameAndFileHashCode(infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
+                .orElseThrow(() -> new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
 
         return FileMetadataResponse.builder().myFiles(files).build();
     }
