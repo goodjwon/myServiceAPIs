@@ -138,9 +138,8 @@ public class FileStorageService {
 
         myFilesRepository.save(myFile);
 
-//        FileMetadataResponse metadataResponse = FileMetadataResponse.builder().myFiles(myFile).build();
         FileMetadataResponse metadataResponse = FileMetadataResponse.builder()
-                .fileName(myFile.getFileOrgName())
+                .fileName(myFile.getFilePhyName())
                 .fileDownloadUri(myFile.getFileDownloadPath())
                 .fileType(myFile.getFileContentType())
                 .size(myFile.getFileSize())
@@ -149,19 +148,6 @@ public class FileStorageService {
                 .ownerAuthenticationCode(myFile.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum())
                 .ownerDomainCode(myFile.getFileOwnerByUserCode().getOwnerDomainCheckSum())
                 .build();
-
-//    public FileMetadataResponse(MyFiles myFiles) {
-//        this.fileName = myFiles.getFilePhyName();
-//        this.fileDownloadUri = myFiles.getFileDownloadPath();
-//        this.fileType = myFiles.getFileContentType();
-//        this.originFileName = myFiles.getFileOrgName();
-//        this.size = myFiles.getFileSize();
-//        this.checkSum = myFiles.getFileHashCode();
-//        this.filePermissions = myFiles.getUserFilePermissions();
-//        this.ownerAuthenticationCode = myFiles.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum();
-//        this.ownerDomainCode = myFiles.getFileOwnerByUserCode().getOwnerDomainCheckSum();
-//    }
-
 
         metadataResponse.addFilePermissionGroup(myFile.getFilePermissionGroups());
 
@@ -265,7 +251,15 @@ public class FileStorageService {
                 })
                 .map(myFile -> myFilesRepository.save(myFile))
                 .map(myFile -> {
-                    FileMetadataResponse metadataResponse = FileMetadataResponse.builder().myFiles(myFile).build();
+                    FileMetadataResponse metadataResponse = FileMetadataResponse.builder()
+                            .fileName(myFile.getFilePhyName())
+                            .fileDownloadUri(myFile.getFileDownloadPath())
+                            .fileType(myFile.getFileContentType())
+                            .size(myFile.getFileSize())
+                            .checkSum(myFile.getFileHashCode())
+                            .filePermission(myFile.getUserFilePermissions())
+                            .ownerAuthenticationCode(myFile.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum())
+                            .ownerDomainCode(myFile.getFileOwnerByUserCode().getOwnerDomainCheckSum()).build();
                     metadataResponse.addFilePermissionGroup(myFile.getFilePermissionGroups());
                     return metadataResponse;
                 })
@@ -290,11 +284,19 @@ public class FileStorageService {
             throw new OwnerNotMeachedException("File not found " + infoRequest.getFilePhyName());
         }
 
-        MyFiles files = myFilesRepository
+        MyFiles myFile = myFilesRepository
                 .findByFilePhyNameAndFileHashCode(infoRequest.getFilePhyName(), infoRequest.getFileCheckSum())
                 .orElseThrow(() -> new MyFileNotFoundException("File not found " + infoRequest.getFilePhyName()));
 
-        return FileMetadataResponse.builder().myFiles(files).build();
+        return FileMetadataResponse.builder()
+                .fileName(myFile.getFilePhyName())
+                .fileDownloadUri(myFile.getFileDownloadPath())
+                .fileType(myFile.getFileContentType())
+                .size(myFile.getFileSize())
+                .checkSum(myFile.getFileHashCode())
+                .filePermission(myFile.getUserFilePermissions())
+                .ownerAuthenticationCode(myFile.getFileOwnerByUserCode().getOwnerAuthenticationCheckSum())
+                .ownerDomainCode(myFile.getFileOwnerByUserCode().getOwnerDomainCheckSum()).build();
     }
 
     /**
@@ -333,9 +335,8 @@ public class FileStorageService {
      */
     private boolean isOwnerRequest(FileInfoRequest fileInfoRequest) {
         boolean result = false;
-        MyFiles myFiles = myFilesRepository.findByFilePhyNameAndFileHashCode(
-                        fileInfoRequest.getFilePhyName(),
-                        fileInfoRequest.getFileCheckSum())
+        MyFiles myFiles = myFilesRepository
+                .findByFilePhyNameAndFileHashCode(fileInfoRequest.getFilePhyName(), fileInfoRequest.getFileCheckSum())
                 .orElseThrow(() -> new MyFileNotFoundException(fileInfoRequest.getFilePhyName()));
 
         FileOwner fileOwner = fileOwnerRepository.findById(myFiles.getFileOwnerByUserCode().getOwnerSeq())
