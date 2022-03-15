@@ -85,7 +85,6 @@ public class FileStorageService {
      * @param fileRequest
      * @return
      */
-    @Transactional
     public FileMetadataResponse saveFile(UploadFileRequest fileRequest) {
         try {
             String uuidFileName = getUUIDFileName(fileRequest.getFile().getOriginalFilename());
