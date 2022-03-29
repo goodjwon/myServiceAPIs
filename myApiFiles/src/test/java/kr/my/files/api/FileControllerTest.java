@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,6 +43,7 @@ import java.util.List;
 import static kr.my.files.enums.UserFilePermissions.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.*;
@@ -73,6 +75,9 @@ public class FileControllerTest {
 
     @Autowired
     FileStorageService fileStorageService;
+
+    @Value("${file.download-public-path}")
+    String proFilePublicDownloadPath;
 
     @Test
     @DisplayName("file, permission.json 파일 submit 테스트")
@@ -270,7 +275,7 @@ public class FileControllerTest {
     @DisplayName("파일요청정보를 수신하고 적절한 권한이 부여되어 있으면 정보를 전달 한다.")
     void getFileInfo() throws Exception {
         //given
-        FileInfoRequest fileInfoRequest = uploadBefore();
+        FileInfoRequest fileInfoRequest = makeFileRequestByResponse(uploadBefore());
 
         //when then
         mockMvc.perform(post("/file-info")
@@ -319,7 +324,7 @@ public class FileControllerTest {
     @DisplayName("파일에 대해서 다운로드 정보를 수신하고 파일을 내려 받는다.")
     void downloadFile() throws Exception {
         //given
-        FileInfoRequest fileInfoRequest = uploadBefore();
+        FileInfoRequest fileInfoRequest = makeFileRequestByResponse(uploadBefore());
 
         //when  file owner check
         //then  file download
@@ -340,7 +345,7 @@ public class FileControllerTest {
     @DisplayName("파일 열람권한을 추가 한다. filePermissionGroups")
     void addFilePermissionGroups() throws Exception {
         //given
-        FileInfoRequest fileInfoRequest = uploadBefore();
+        FileInfoRequest fileInfoRequest = makeFileRequestByResponse(uploadBefore());
 
         List<String> addFilePermission = new ArrayList<>();
 
@@ -374,16 +379,34 @@ public class FileControllerTest {
     @DisplayName("모두 공계 파일일때 별도 지정된 디렉터리로 저장 여부 확인")
     void uploadFPublicFile() throws Exception {
         //given
-        //when
+        FileMetadataResponse response = uploadPublicPermissionBefore();
+
         //then
+        assertThat(response.getFileDownloadUri(), containsString(proFilePublicDownloadPath) );
     }
 
     @Test
     @DisplayName("파일 사용자 정보가 없으면 예외 처리 한다.")
     void saveFileUserinfo() throws Exception {
         //given
-        //when
-        //then
+        FileMetadataResponse response = uploadBefore();
+
+        FileInfoRequest fileInfoRequest = FileInfoRequest.builder()
+                .filePhyName(response.getFileName())
+                .fileCheckSum(response.getCheckSum())
+                .ownerDomainCode(response.getOwnerDomainCode())
+                .build();
+
+        //when  file owner check
+        //then  file download
+        MvcResult result = mockMvc.perform(post("/file-download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fileInfoRequest)))
+                .andExpect(status().is(200))
+                .andExpect(header().string("Accept-Ranges", "bytes"))
+                .andDo(print())
+                .andReturn();
+
     }
 
 
@@ -454,7 +477,7 @@ public class FileControllerTest {
      * @return
      * @throws Exception
      */
-    private FileInfoRequest uploadBefore() throws Exception {
+    private FileMetadataResponse uploadBefore() throws Exception {
         //Given 파일생성
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt",
                 TEXT_PLAIN_VALUE, "Hello, World!".getBytes(StandardCharsets.UTF_8));
@@ -474,7 +497,7 @@ public class FileControllerTest {
         String userCode = "goodjwon@gmail.com";
 
 
-        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
+        return fileStorageService.saveFile(UploadFileRequest.builder()
                 .file(file)
                 .fileName(file.getOriginalFilename())
                 .userFilePermissions(filePermissions)
@@ -482,7 +505,9 @@ public class FileControllerTest {
                 .ownerDomainCode(ownerDomain)
                 .ownerAuthenticationCode(userCode)
                 .build());
+    }
 
+    private FileInfoRequest makeFileRequestByResponse(FileMetadataResponse response){
         return FileInfoRequest.builder()
                 .filePhyName(response.getFileName())
                 .fileCheckSum(response.getCheckSum())
@@ -491,8 +516,7 @@ public class FileControllerTest {
                 .build();
     }
 
-
-    private FileInfoRequest uploadPublicPermissionBefore() throws Exception {
+    private FileMetadataResponse uploadPublicPermissionBefore() throws Exception {
         //Given 파일생성
         File resource = new ClassPathResource("data/sample-image/IMG_3421.jpg").getFile();
         MockMultipartFile file = new MockMultipartFile("image",
@@ -509,19 +533,12 @@ public class FileControllerTest {
         String ownerDomain = "www.abc.com";
         String userCode = "goodjwon@gmail.com";
 
-        FileMetadataResponse response = fileStorageService.saveFile(UploadFileRequest.builder()
+        return fileStorageService.saveFile(UploadFileRequest.builder()
                 .file(file)
                 .fileName(file.getOriginalFilename())
                 .userFilePermissions(filePermissions)
                 .ownerDomainCode(ownerDomain)
                 .ownerAuthenticationCode(userCode)
                 .build());
-
-        return FileInfoRequest.builder()
-                .filePhyName(response.getFileName())
-                .fileCheckSum(response.getCheckSum())
-                .ownerAuthenticationCode(response.getOwnerAuthenticationCode())
-                .ownerDomainCode(response.getOwnerDomainCode())
-                .build();
     }
 }
