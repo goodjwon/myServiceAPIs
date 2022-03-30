@@ -402,8 +402,7 @@ public class FileControllerTest {
         MvcResult result = mockMvc.perform(post("/file-download")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fileInfoRequest)))
-                .andExpect(status().is(200))
-                .andExpect(header().string("Accept-Ranges", "bytes"))
+                .andExpect(status().is(400))
                 .andDo(print())
                 .andReturn();
 
