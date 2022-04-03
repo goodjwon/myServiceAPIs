@@ -386,8 +386,8 @@ public class FileControllerTest {
     }
 
     @Test
-    @DisplayName("파일 사용자 정보가 없으면 예외 처리 한다.")
-    void saveFileUserinfo() throws Exception {
+    @DisplayName("파일 다운로드 요청시 공개 파일이 아닐 경우 사용자 정보가 없으면 예외 처리 한다.")
+    void getFileInfoWithoutUserinfo_fail() throws Exception {
         //given
         FileMetadataResponse response = uploadBefore();
 
@@ -408,11 +408,42 @@ public class FileControllerTest {
 
     }
 
+    @Test
+    @DisplayName("파일 다운로드 요청시 공개 파일 경우 사용자 정보가 없어도 파일 정보를 제공한다.")
+    void getPublicFileInfoWithoutUserinfo_OK() throws Exception {
+        //given
+        FileMetadataResponse response = uploadPublicPermissionBefore();
+
+        FileInfoRequest fileInfoRequest = FileInfoRequest.builder()
+                .filePhyName(response.getFileName())
+                .fileCheckSum(response.getCheckSum())
+                .ownerDomainCode(response.getOwnerDomainCode())
+                .build();
+
+        //when  file owner check
+        //then  file download
+        MvcResult result = mockMvc.perform(post("/file-download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fileInfoRequest)))
+                .andExpect(status().is(200))
+                .andDo(print())
+                .andReturn();
+
+    }
+
 
     @Test
     @DisplayName("파일 메타정보 DB 가 없으면 예외 처리 한다.")
-    void saveFileMetainfo() throws Exception {
+    void getFileInfoWithoutFileMetainfo() throws Exception {
         //given
+        /**
+         * {
+         *  "filePhyName":"17745d42-050b-4ddb-89ec-8f3da2c720d6.txt",
+         *  "ownerDomainCode":"19103e6354655886cb2f46880a4ae116",
+         *  "ownerAuthenticationCode":"41a11f24348d2c513c5f0acac52d3531",
+         *  "fileCheckSum":"65a8e27d8879283831b664bd8b7f0ad4"
+         * }
+         */
         //when
         //then
     }
