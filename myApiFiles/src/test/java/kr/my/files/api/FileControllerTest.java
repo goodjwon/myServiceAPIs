@@ -465,6 +465,14 @@ public class FileControllerTest {
         //then
     }
 
+    @Test
+    @DisplayName("썸네일 이미지 불가능 할 경우 예외 처리 함")
+    void imageFileUploadMakeThumbnailImage_400() throws Exception {
+        //given
+        //when
+        //then
+    }
+
 
     @Test
     @DisplayName("파일 다운로드 기록 저장")
