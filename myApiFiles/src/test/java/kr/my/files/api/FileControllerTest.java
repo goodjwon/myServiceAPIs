@@ -422,7 +422,7 @@ public class FileControllerTest {
 
         //when  file owner check
         //then  file download
-        MvcResult result = mockMvc.perform(post("/file-download")
+        MvcResult result = mockMvc.perform(post("/file-info")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fileInfoRequest)))
                 .andExpect(status().is(200))
@@ -433,8 +433,8 @@ public class FileControllerTest {
 
 
     @Test
-    @DisplayName("파일 메타정보 DB 가 없으면 예외 처리 한다.")
-    void getFileInfoWithoutFileMetainfo() throws Exception {
+    @DisplayName("파일 요청시 메타정보가 없으면 예외 처리 한다. 400에러 처리 한다.")
+    void getFileInfoWithoutFileMetainfo_fail() throws Exception {
         //given
         /**
          * {
@@ -446,6 +446,12 @@ public class FileControllerTest {
          */
         //when
         //then
+    }
+
+    @Test
+    @DisplayName("이미지 파일일 경우 썸네일을 만들어 내려준다.")
+    void testImageFileMakeThumbnail(){
+
     }
 
     @Test
